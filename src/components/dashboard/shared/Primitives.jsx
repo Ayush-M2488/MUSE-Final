@@ -344,7 +344,7 @@ export const Sidebar = ({ role, page, onNav, onLogout }) => {
                         justifyContent: 'center',
                     }}
                 >
-                    <img src="/src/assets/mysore_logo.png" alt="MUSE Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    <img src="/mysore_logo.png" alt="MUSE Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 </div>
 
                 <div>

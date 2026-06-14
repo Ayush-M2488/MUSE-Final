@@ -49,7 +49,7 @@ export default function LoginPage({ initialRole = 'student', onBack, onLoginSucc
       {/* Background Image & Blur Overlay */}
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center opacity-40"
-        style={{ backgroundImage: `url('/src/assets/school-of-engineering.webp')` }} 
+        style={{ backgroundImage: `url('/school-of-engineering.webp')` }} 
       />
       <div className="absolute inset-0 z-0 bg-black/60 backdrop-blur-[3px]" />
       
@@ -70,7 +70,7 @@ export default function LoginPage({ initialRole = 'student', onBack, onLoginSucc
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-8">
           <img 
-            src="/src/assets/mysore_logo.png" 
+            src="/mysore_logo.png" 
             alt="MUSE Logo" 
             className="w-12 h-12 mb-4 object-contain" 
           />

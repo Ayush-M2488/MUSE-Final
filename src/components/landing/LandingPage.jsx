@@ -379,7 +379,7 @@ const Navbar = ({ activeSection, onPortalLogin }) => {
 
           {/* Logo */}
           <a href="#home" className="flex items-center gap-3 group flex-shrink-0">
-            <img src="/src/assets/mysore_logo.png" alt="MUSE Logo" className="w-14 h-14 lg:w-16 lg:h-16 object-contain transition-transform duration-300 group-hover:scale-105" />
+            <img src="/mysore_logo.png" alt="MUSE Logo" className="w-14 h-14 lg:w-16 lg:h-16 object-contain transition-transform duration-300 group-hover:scale-105" />
 
 
 
@@ -991,7 +991,7 @@ const Contact = () => {
         </div>
 
         <div ref={formRef} className="reveal bg-[#0A0A0A] border border-[#222] p-8 lg:p-14 w-full rounded-2xl shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 z-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url('/src/assets/school-of-engineering.webp')` }} />
+          <div className="absolute inset-0 z-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url('/school-of-engineering.webp')` }} />
           <div className="absolute inset-0 z-0 bg-black/60 backdrop-blur-[2px]" />
           <div className="relative z-10">
             <h3 className="font-sans font-extrabold tracking-tight text-2xl lg:text-3xl text-white mb-8">Official Correspondence</h3>
@@ -1059,7 +1059,7 @@ const Footer = () => (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 mb-24 relative z-10">
         <div className="lg:col-span-4 pr-8">
           <div className="flex items-center gap-6 mb-8">
-            <img src="/src/assets/mysore_logo.png" alt="MUSE Logo" className="w-20 h-20 object-contain drop-shadow-xl" />
+            <img src="/mysore_logo.png" alt="MUSE Logo" className="w-20 h-20 object-contain drop-shadow-xl" />
             <div>
               <div className="font-sans font-bold tracking-tight text-3xl text-white">MUSE</div>
               <div className="font-mono text-[0.6rem] uppercase tracking-widest text-white/60 mt-1.5">School of Engineering</div>
