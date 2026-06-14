@@ -1,0 +1,4 @@
+Name,Email,Role,Department,Semester,USN_or_EmployeeID
+Test Student One,test.student.one@muse.ac.in,Student,AI & ML,5,21AM701
+Test Student Two,test.student.two@muse.ac.in,Student,Biomedical,3,21BM702
+Test Teacher One,test.teacher.one@muse.ac.in,Faculty,CS Design,5,FAC-901

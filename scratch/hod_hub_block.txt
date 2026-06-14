@@ -1,0 +1,634 @@
+if (page === 'hod_hub') {
+        const fetchHod = async () => {
+            setLoadingHod(true);
+            try {
+                const [hub, studs] = await Promise.all([
+                    teacherService.getDepartmentHub(),
+                    teacherService.getDepartmentStudents()
+                ]);
+                setHodData(hub);
+                setHodStudents(studs);
+            } catch (err) {
+                console.error("Failed to fetch HOD data", err);
+            } finally {
+                setLoadingHod(false);
+            }
+        };
+        fetchHod();
+    }
+  }, [page]);
+
+
+  const handleViewFaculty = async (emp_id) => {
+    setHodFacultyModal(true);
+    setHodLoadingFaculty(true);
+    try {
+        const details = await teacherService.getDepartmentFacultyDetails(emp_id);
+        setHodFacultyDetails(details);
+    } catch (err) {
+        console.error("Failed to load faculty details", err);
+    } finally {
+        setHodLoadingFaculty(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!hodData || hodStudents.length === 0) return;
+    const header = "USN,Name,Semester,CGPA,Risk Level\n";
+    const rows = hodStudents.map(s => `"${s.usn}","${s.name}",${s.semester},${s.cgpa},"${s.risk}"`).join("\n");
+    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(header + rows);
+    const link = document.createElement("a");
+    link.setAttribute("href", csvContent);
+    link.setAttribute("download", `Department_Report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleToggleHoliday = async () => {
+    const isSunday = new Date(attDate).getDay() === 0;
+    if (isSunday) {
+      alert("Cannot declare Sunday as a Holiday.");
+      return;
+    }
+
+    const isAll = holidayScope === 'all';
+    const targetCourses = isAll ? [null] : selectedHolidayCourses;
+
+    if (!isAll && targetCourses.length === 0) {
+      alert("Please select at least one class or choose 'All Classes'.");
+      return;
+    }
+
+    try {
+      // Check if any of the target courses already have a holiday declared on this date
+      const alreadyHoliday = targetCourses.some(code => 
+        dashboardData?.holidays?.some(h => h.date === attDate && h.course_code === code)
+      );
+
+      const scopeLabel = isAll ? "All Classes" : `${targetCourses.length} selected classes (${targetCourses.join(', ')})`;
+      const msg = alreadyHoliday 
+        ? `Are you sure you want to remove the Holiday status on this day for the selected ${scopeLabel}?` 
+        : `Are you sure you want to declare this day as a Holiday for the selected ${scopeLabel}? Any matching attendance records on this day will be permanently cleared.`;
+      if (!window.confirm(msg)) return;
+
+      for (const code of targetCourses) {
+        const isCurrentHoliday = dashboardData?.holidays?.some(h => h.date === attDate && h.course_code === code);
+        // Only toggle if it matches the action we want
+        if (alreadyHoliday ? isCurrentHoliday : !isCurrentHoliday) {
+          await teacherService.toggleHoliday(attDate, alreadyHoliday ? "" : `Holiday declared for ${code || 'All Classes'}`, code);
+        }
+      }
+
+      alert(alreadyHoliday ? "Holiday status removed successfully!" : "Holiday declared successfully!");
+      await fetchDashboard();
+    } catch (err) {
+      console.error("Failed to toggle holiday:", err);
+      alert("Failed to update holiday status.");
+    }
+  };
+
+  // --- 3. CRUD HANDLERS ---
+  const handleMarkAttendance = async (usn, status, specificCourseCode) => {
+    const courseCode = specificCourseCode || dashboardData.courses[ci].code;
+    // Optimistic UI update
+    setCourseStudents(prev => prev.map(s => (s.usn === usn && s.course_code === courseCode) ? { ...s, todayAtt: status } : s));
+    try {
+      await teacherService.markAttendance(courseCode, { usn, status, date: attDate });
+    } catch (err) {
+      alert("Failed to save attendance. Please try again.");
+    }
+  };
+
+  const handleMarkChange = (usn, field, value) => {
+    if (value === '') {
+      setCourseStudents(prev => prev.map(s => s.usn === usn ? { ...s, [field]: '' } : s));
+      return;
+    }
+    const num = Number(value);
+    let max = 30; // default for ia1, ia2, ia3
+    if (field === 'practical') max = 20;
+    if (field === 'finalExam') max = 100;
+    
+    if (isNaN(num) || num < 0 || num > max) return;
+    setCourseStudents(prev => prev.map(s => s.usn === usn ? { ...s, [field]: value } : s));
+  };
+
+  const handleSaveMarks = async () => {
+    setSavingMarks(true);
+    const courseCode = dashboardData.courses[ci].code;
+    try {
+      const payload = courseStudents.map(s => ({ usn: s.usn, ia1: s.ia1, ia2: s.ia2, ia3: s.ia3, practical: s.practical, finalExam: s.finalExam }));
+      await teacherService.saveMarks(courseCode, payload);
+      alert('Marks saved successfully to database!');
+    } catch (err) {
+      alert("Failed to save marks.");
+    } finally {
+      setSavingMarks(false);
+    }
+  };
+
+  const handleEnroll = async () => {
+    if (!enrollData.usn || enrollData.courseIds.length === 0) {
+      return alert("USN and at least one Subject are required.");
+    }
+    setSavingEnroll(true);
+
+    try {
+      await Promise.all(enrollData.courseIds.map(async (idStr) => {
+        const parts = idStr.split('|');
+        const courseCode = parts[0];
+        const selectedSection = parts[1];
+        await teacherService.enrollStudent(courseCode, { ...enrollData, section: selectedSection });
+      }));
+      
+      alert("Student enrolled successfully!");
+      setEnrollModalOpen(false);
+      setEnrollData({ name: '', usn: '', email: '', program: '', semester: '', courseIds: [] });
+
+      // Refresh students for the currently active tab (which might be 'all' or the specific course)
+      const activeCourseCode = ci === -1 ? 'all' : dashboardData.courses[ci].code;
+      const activeSection = ci === -1 ? null : dashboardData.courses[ci].section;
+
+      const students = await teacherService.getCourseStudents(activeCourseCode, attDate, activeSection);
+      setCourseStudents(students.map(s => ({
+        usn: s.usn,
+        name: s.name,
+        program: s.program,
+        semester: s.semester,
+        cgpa: s.cgpa,
+        course_code: s.course_code,
+        section: s.section,
+        att: s.attendance_percentage !== undefined ? s.attendance_percentage : 0,
+        todayAtt: s.today_attendance || null,
+        ia1: s.ia1 !== undefined && s.ia1 !== null ? String(s.ia1) : '',
+        ia2: s.ia2 !== undefined && s.ia2 !== null ? String(s.ia2) : '',
+        ia3: s.ia3 !== undefined && s.ia3 !== null ? String(s.ia3) : '',
+        practical: s.practical !== undefined && s.practical !== null ? String(s.practical) : '',
+        finalExam: s.finalExam !== undefined && s.finalExam !== null ? String(s.finalExam) : '',
+        risk: s.academic_standing === 'Good' ? 'Low' : 'Medium',
+        factors: [],
+        fb: null,
+        notes: ''
+      })));
+
+      const data = await teacherService.getDashboardData();
+      setDashboardData(data);
+    } catch (err) {
+      alert("Failed to enroll student.");
+    } finally {
+      setSavingEnroll(false);
+    }
+  };
+
+  const handleLogIntervention = async () => {
+    if (!interNotes.trim()) return alert("Please add notes");
+    setSavingIntervention(true);
+    try {
+      await interventionService.logIntervention({
+        usn: interModalUsn,
+        action_taken: interAction,
+        notes: interNotes
+      });
+      alert('Intervention logged successfully! Audit trail updated.');
+      setInterModalUsn(null);
+      setInterNotes('');
+    } catch (err) {
+      alert('Failed to log intervention.');
+    } finally {
+      setSavingIntervention(false);
+    }
+  };
+
+  const handleSendDirectMessage = async () => {
+    if (!interactMessage.trim()) return alert("Please enter a message.");
+    setSavingInteractMessage(true);
+    try {
+      await interventionService.sendStudentMessage(interactModalUsn, {
+        message: interactMessage,
+        type: interactType
+      });
+      setInteractSuccess(true);
+      setInteractMessage('');
+      setTimeout(() => {
+        setInteractSuccess(false);
+        setInteractModalUsn(null);
+      }, 2000);
+    } catch (err) {
+      alert("Failed to send message. Please try again.");
+    } finally {
+      setSavingInteractMessage(false);
+    }
+  };
+
+  const handleRunAI = async () => {
+    setRunningAI(true);
+    const courseCode = dashboardData.courses[ci].code;
+    try {
+      await mlService.generatePredictions(courseCode);
+      const preds = await mlService.getCoursePredictions(courseCode);
+      setPredictions(preds);
+      alert('AI Analysis complete!');
+    } catch (err) {
+      alert('Failed to run AI analysis.');
+    } finally {
+      setRunningAI(false);
+    }
+  };
+
+  const toggleTask = async (id) => {
+    // Optimistic UI update
+    setDashboardData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(t => t.id === id ? { ...t, done: !t.done } : t)
+    }));
+    try {
+      await teacherService.toggleTask(id);
+    } catch (err) {
+      alert('Failed to update task');
+      // Revert on failure
+      setDashboardData(prev => ({
+        ...prev,
+        tasks: prev.tasks.map(t => t.id === id ? { ...t, done: !t.done } : t)
+      }));
+    }
+  };
+
+  const handleCreateTask = async () => {
+    if (!taskData.text) return alert("Task description is required.");
+    setSavingTask(true);
+    try {
+      let finalTxt = taskData.text;
+      if (taskData.courseId) {
+        finalTxt = `[${taskData.courseId}] ${finalTxt}`;
+      }
+      const newTask = await teacherService.createTask({
+        text: finalTxt,
+        due_date: taskData.due_date || 'Today',
+        urgent: taskData.urgent
+      });
+      setDashboardData(prev => ({
+        ...prev,
+        tasks: [newTask, ...prev.tasks]
+      }));
+      setTaskModalOpen(false);
+      setTaskData({ text: '', due_date: new Date().toISOString().split('T')[0], urgent: false, courseId: '' });
+    } catch (err) {
+      alert("Failed to create task");
+    } finally {
+      setSavingTask(false);
+    }
+  };
+
+  const handleDeleteTask = async (id) => {
+    const originalTasks = [...dashboardData.tasks];
+    setDashboardData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(t => t.id !== id)
+    }));
+    try {
+      await teacherService.deleteTask(id);
+    } catch (err) {
+      alert("Failed to delete task");
+      setDashboardData(prev => ({ ...prev, tasks: originalTasks }));
+    }
+  };
+
+  const handleSendAnnouncement = async () => {
+    if (!anno.trim()) return;
+    try {
+      if (annoTarget === 'Department_Broadcast') {
+          await teacherService.sendDepartmentAnnouncement(anno);
+      } else {
+          const targetCourseCode = annoTarget === 'All' ? null : annoTarget;
+          await teacherService.sendAnnouncement(anno, targetCourseCode);
+      }
+      setAnnoSent(true);
+      setAnno('');
+      setTimeout(() => setAnnoSent(false), 3000);
+    } catch (err) {
+      alert('Failed to send announcement');
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    setSavingProfile(true);
+    try {
+      await authService.updateProfile({ name: profileName, email: profileEmail });
+
+      // Save additional classroom preferences
+      await teacherService.updateSettings({
+        custom_thresholds: customThresholds,
+        notification_prefs: {
+          emailOnHighRisk,
+          autoNotifyAbsentee
+        },
+        consultation_hours: consultationSlots
+      });
+
+      // Update local storage to reflect new name
+      const storedUser = JSON.parse(localStorage.getItem('muse_user') || '{}');
+      storedUser.name = profileName;
+      storedUser.email = profileEmail;
+      localStorage.setItem('muse_user', JSON.stringify(storedUser));
+
+      // Refresh dashboard state from database
+      await fetchDashboard();
+
+      alert('All settings and profile updated successfully!');
+    } catch (err) {
+      alert('Failed to update profile settings.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  // --- RENDER GUARDS ---
+  if (loading) return <Loader dk />;
+  if (error) return <div style={{ padding: '2rem', color: t.rHigh }}>{error}</div>;
+  if (!dashboardData) return null;
+
+  // --- MAP REAL DATA TO UI VARIABLES ---
+  const d = dashboardData || {};
+  const courses = d.courses || [];
+  const profile = d.profile || {};
+  const tasksList = d.tasks || [];
+  const trendData = d.attTrend || [];
+  const C = courses[ci] || {};
+
+  const filtered = courseStudents.filter((s) => (rf === 'All' ? true : s.risk === rf));
+
+  // --- UI COMPONENTS ---
+  const renderCourseTabs = (allowAll = false) => (
+    <div style={{ display: 'flex', gap: '.45rem', marginBottom: '.25rem', flexWrap: 'wrap' }}>
+      {allowAll && (
+        <button onClick={() => setCi(-1)} className={`btn ${ci === -1 ? 'btn-wh' : 'btn-gh'}`}>
+          All Classes
+        </button>
+      )}
+      {courses.map((c, i) => (
+        <button key={`${c.code}-${c.section}`} onClick={() => setCi(i)} className={`btn ${i === ci ? 'btn-wh' : 'btn-gh'}`}>
+          {c.code} ({c.section})
+        </button>
+      ))}
+    </div>
+  );
+
+  // Sort helper for single-subject tables (Attendance/Marks)
+  const handleSort = (field) => {
+    if (sortField === field) setSortAsc(!sortAsc);
+    else { setSortField(field); setSortAsc(true); }
+  };
+
+  const getSortedStudents = (list) => {
+    return [...list].sort((a, b) => {
+      // If "All Classes" is selected and we aren't explicitly sorting by course_code, group by course_code first anyway!
+      if (ci === -1 && sortField !== 'course_code') {
+        const cA = a.course_code || '';
+        const cB = b.course_code || '';
+        if (cA < cB) return -1;
+        if (cA > cB) return 1;
+      }
+      
+      let valA = a[sortField] || '';
+      let valB = b[sortField] || '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return sortAsc ? -1 : 1;
+      if (valA > valB) return sortAsc ? 1 : -1;
+      return 0;
+    });
+  };
+
+  // Derived grouping and sorting specifically for Manage Students table
+  const getDerivedStudents = () => {
+    // 1. Normalize and Group
+    const normalized = courseStudents.reduce((acc, s) => {
+      const existing = acc.find(x => x.usn === s.usn);
+      if (existing) {
+        if (s.course_code && !existing.assignedSubjects.includes(s.course_code)) {
+          existing.assignedSubjects.push(s.course_code);
+        }
+      } else {
+        acc.push({
+          ...s,
+          assignedSubjects: s.course_code ? [s.course_code] : []
+        });
+      }
+      return acc;
+    }, []);
+
+    // 2. Sort by assigned subjects then name
+    return normalized.sort((a, b) => {
+      // Unassigned at bottom
+      if (a.assignedSubjects.length === 0 && b.assignedSubjects.length > 0) return 1;
+      if (a.assignedSubjects.length > 0 && b.assignedSubjects.length === 0) return -1;
+      
+      // Sort by first subject
+      const aSub = a.assignedSubjects[0] || '';
+      const bSub = b.assignedSubjects[0] || '';
+      if (aSub < bSub) return -1;
+      if (aSub > bSub) return 1;
+
+      // Sort by name
+      const aName = (a.name || '').toLowerCase();
+      const bName = (b.name || '').toLowerCase();
+      if (aName < bName) return -1;
+      if (aName > bName) return 1;
+
+      return 0;
+    });
+  };
+
+  // --- PAGE ROUTING ---
+  if (page === 'mentees') return <MenteesTab />;
+
+  if (page === 'hod_hub') {
+    if (loadingHod) return <Loader dk />;
+    if (!hodData) return <div style={{ color: t.muted }}>No HOD data available.</div>;
+
+    const { analytics, workload } = hodData;
+    const sortedWorkload = [...workload].sort((a,b) => b.courses - a.courses);
+
+    const handleHodSort = (key) => {
+        let direction = 'asc';
+        if (hodSortConfig.key === key && hodSortConfig.direction === 'asc') direction = 'desc';
+        setHodSortConfig({ key, direction });
+    };
+
+    const riskLevels = { 'High': 3, 'Medium': 2, 'Low': 1 };
+    
+    const sortedHodStudents = [...hodStudents].sort((a, b) => {
+        let aVal = a[hodSortConfig.key];
+        let bVal = b[hodSortConfig.key];
+
+        if (hodSortConfig.key === 'risk') {
+            aVal = riskLevels[a.risk] || 0;
+            bVal = riskLevels[b.risk] || 0;
+        } else if (typeof aVal === 'string') {
+            aVal = aVal.toLowerCase();
+            bVal = (bVal || '').toLowerCase();
+        }
+
+        if (aVal < bVal) return hodSortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return hodSortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    return (
+      <>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+          <KPI label="Total Department Students" value={analytics.totalStudents} dk icon={Users} />
+          <KPI label="Total Faculty" value={analytics.totalFaculty} dk icon={Users} />
+          <KPI label="High Risk Students" value={analytics.riskHigh} dk accent={t.rHigh} icon={AlertTriangle} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+          {/* Department Students Table */}
+          <div className="card-dk" style={{ overflow: 'hidden' }}>
+            <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '.9rem', fontWeight: 600, color: '#fff', margin: 0 }}>Department Students</h3>
+                <button className="btn btn-nt" style={{ padding: '.25rem .5rem', fontSize: '.75rem' }} onClick={handleExportCSV}>
+                    <Download size={13} style={{ marginRight: 4 }} /> Export CSV
+                </button>
+            </div>
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                <table className="tbl tbl-dk">
+                    <thead>
+                        <tr>
+                            <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleHodSort('usn')}>USN {hodSortConfig.key === 'usn' ? (hodSortConfig.direction === 'asc' ? '↑' : '↓') : ''}</th>
+                            <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleHodSort('name')}>Name {hodSortConfig.key === 'name' ? (hodSortConfig.direction === 'asc' ? '↑' : '↓') : ''}</th>
+                            <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleHodSort('semester')}>Sem {hodSortConfig.key === 'semester' ? (hodSortConfig.direction === 'asc' ? '↑' : '↓') : ''}</th>
+                            <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleHodSort('risk')}>Risk {hodSortConfig.key === 'risk' ? (hodSortConfig.direction === 'asc' ? '↑' : '↓') : ''}</th>
+                            <th>Mentor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {sortedHodStudents.length === 0 ? (
+                            <tr><td colSpan="5" style={{ textAlign: 'center', color: t.muted }}>No students found in department.</td></tr>
+                        ) : (
+                            sortedHodStudents.map(s => (
+                                <tr key={s.usn}>
+                                    <td style={{ fontFamily: 'JetBrains Mono, monospace' }}>{s.usn}</td>
+                                    <td>{s.name}</td>
+                                    <td>{s.semester}</td>
+                                    <td>
+                                        <span className="b bM" style={{ 
+                                            background: s.risk === 'High' ? `${t.rHigh}1a` : s.risk === 'Medium' ? `${t.rMed}1a` : `${t.rLow}1a`,
+                                            color: s.risk === 'High' ? t.rHigh : s.risk === 'Medium' ? t.rMed : t.rLow,
+                                            borderColor: s.risk === 'High' ? `${t.rHigh}44` : s.risk === 'Medium' ? `${t.rMed}44` : `${t.rLow}44`
+                                        }}>{s.risk}</span>
+                                    </td>
+                                    <td>
+                                        <select
+                                            className="inp-dk"
+                                            style={{ width: 140, padding: '.3rem .5rem', fontSize: '.75rem', cursor: 'pointer' }}
+                                            value={s.mentor_emp_id || ""}
+                                            onChange={async (e) => {
+                                                const empId = e.target.value;
+                                                try {
+                                                    await teacherService.assignMentor(s.usn, empId);
+                                                    alert('Mentor assigned successfully!');
+                                                    const studs = await teacherService.getDepartmentStudents();
+                                                    setHodStudents(studs);
+                                                } catch (err) {
+                                                    alert('Failed to assign mentor');
+                                                }
+                                            }}
+                                        >
+                                            <option value="" disabled>Unassigned</option>
+                                            {hodData.workload.map(f => (
+                                                <option key={f.emp_id} value={f.emp_id}>{f.name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+          </div>
+
+          {/* Faculty Workload Table */}
+          <div className="card-dk" style={{ overflow: 'hidden' }}>
+            <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+                <h3 style={{ fontSize: '.9rem', fontWeight: 600, color: '#fff', margin: 0 }}>Faculty Workload Overview</h3>
+            </div>
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                <table className="tbl tbl-dk">
+                    <thead>
+                        <tr><th>Name</th><th>Emp ID</th><th>Courses Assigned</th></tr>
+                    </thead>
+                    <tbody>
+                        {sortedWorkload.map(f => (
+                            <tr key={f.emp_id} onClick={() => handleViewFaculty(f.emp_id)} style={{ cursor: 'pointer' }} className="hover-row">
+                                <td>
+                                    {f.name} {f.is_hod && <span style={{ fontSize: '.6rem', background: t.btnTl, padding: '2px 4px', borderRadius: 4, marginLeft: 4 }}>HOD</span>}
+                                </td>
+                                <td style={{ fontFamily: 'JetBrains Mono, monospace', color: t.muted }}>{f.emp_id}</td>
+                                <td style={{ fontWeight: 600 }}>{f.courses}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {hodFacultyModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="card-dk" style={{ width: '100%', maxWidth: 600, padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+            {hodLoadingFaculty || !hodFacultyDetails ? (
+              <Loader dk />
+            ) : (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: t.text, margin: 0 }}>{hodFacultyDetails.name}</h3>
+                    <div style={{ fontSize: '.78rem', color: t.muted, marginTop: 2 }}>{hodFacultyDetails.designation} • {hodFacultyDetails.emp_id}</div>
+                  </div>
+                  <button className="btn btn-gh" onClick={() => setHodFacultyModal(false)}><X size={15} /></button>
+                </div>
+
+                <div style={{ fontWeight: 600, color: t.text, marginBottom: '.75rem', fontSize: '.9rem' }}>Assigned Courses ({hodFacultyDetails.courses.length})</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+                  {hodFacultyDetails.courses.length === 0 ? (
+                    <div style={{ color: t.muted, fontSize: '.8rem' }}>No courses assigned to this faculty member.</div>
+                  ) : (
+                    hodFacultyDetails.courses.map(c => (
+                      <div key={c.course_code} style={{ padding: '1rem', borderRadius: 8, border: `1px solid ${t.border}`, background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: '.9rem', fontWeight: 600, color: t.text }}>{c.course_name}</div>
+                          <div style={{ fontSize: '.75rem', color: t.muted, fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>{c.course_code}</div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '1.25rem', textAlign: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: t.text }}>{c.total_students}</div>
+                            <div style={{ fontSize: '.65rem', color: t.muted, textTransform: 'uppercase' }}>Students</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: c.avg_attendance < 75 ? t.rHigh : t.teal }}>{c.avg_attendance.toFixed(1)}%</div>
+                            <div style={{ fontSize: '.65rem', color: t.muted, textTransform: 'uppercase' }}>Avg Att</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: c.high_risk > 0 ? t.rHigh : t.muted }}>{c.high_risk}</div>
+                            <div style={{ fontSize: '.65rem', color: t.muted, textTransform: 'uppercase' }}>High Risk</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+  

@@ -1,0 +1,12 @@
+        if (page === 'system') {
+            const fetchBackups = async () => {
+                try {
+                    const data = await adminService.getBackups();
+                    setBackupList(data || []);
+                } catch (error) {
+                    console.error('Failed to load backup archives:', error);
+                }
+            };
+            fetchBackups();
+        }
+    }, [page]);

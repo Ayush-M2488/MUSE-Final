@@ -1,0 +1,198 @@
+    if (page === 'config')
+        return (
+            <Card style={{ padding: '1.5rem', maxWidth: 840 }}>
+                <div style={{ fontWeight: 600, color: t.text, marginBottom: '1rem' }}>System Configuration</div>
+
+                {/* Sub Tab Navigation */}
+                <div style={{ display: 'flex', borderBottom: `1px solid ${t.sep}`, gap: '.25rem', marginBottom: '1.25rem', overflowX: 'auto' }}>
+                    {[
+                        ['academic', 'Academic Defaults'],
+                        ['ai', 'AI & Risk'],
+                        ['system', 'System & Backup']
+                    ].map(([id, label]) => (
+                        <div
+                            key={id}
+                            className={`tab tab-lt ${configTab === id ? 'on' : ''}`}
+                            onClick={() => setConfigTab(id)}
+                            style={{ fontSize: '.76rem', padding: '.5rem .75rem', cursor: 'pointer' }}
+                        >
+                            {label}
+                        </div>
+                    ))}
+                </div>
+
+                <div style={{ minHeight: '220px' }}>
+                    {configTab === 'academic' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.875rem' }}>
+                            <div>
+                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>Min. Attendance (%)</div>
+                                <input type="number" className="inp-lt" value={cfg.minAtt || ''} onChange={(e) => setCfg((p) => ({ ...p, minAtt: e.target.value }))} />
+                            </div>
+                            <div>
+                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>IA Max Marks</div>
+                                <input type="number" className="inp-lt" value={cfg.iaMax || ''} onChange={(e) => setCfg((p) => ({ ...p, iaMax: e.target.value }))} />
+                            </div>
+                            <div style={{ gridColumn: 'span 2' }}>
+                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>Academic Year</div>
+                                <input className="inp-lt" value={cfg.ay || ''} onChange={(e) => setCfg((p) => ({ ...p, ay: e.target.value }))} />
+                            </div>
+                            <div>
+                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>Semester Start</div>
+                                <input type="date" className="inp-lt" value={cfg.semStart || ''} onChange={(e) => setCfg((p) => ({ ...p, semStart: e.target.value }))} />
+                            </div>
+                            <div>
+                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>Semester End</div>
+                                <input type="date" className="inp-lt" value={cfg.semEnd || ''} onChange={(e) => setCfg((p) => ({ ...p, semEnd: e.target.value }))} />
+                            </div>
+                        </div>
+                    )}
+
+                    {configTab === 'ai' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.875rem' }}>
+                            <div style={{ gridColumn: 'span 2' }}>
+                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>AI Early Warning Model</div>
+                                <select className="inp-lt" style={{ width: '100%', height: '38px' }} value={cfg.mlModelType || 'Random Forest'} onChange={(e) => setCfg((p) => ({ ...p, mlModelType: e.target.value }))}>
+                                    <option value="Random Forest">Random Forest (Recommended v2.0)</option>
+                                    <option value="Gradient Boosting">Gradient Boosting Classifier</option>
+                                    <option value="Logistic Regression">Logistic Regression (Linear Baseline)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>High Risk Threshold ({Math.round((parseFloat(cfg.highT)||0.7)*100)}%)</div>
+                                <input type="range" min="0.5" max="0.95" step="0.05" className="inp-lt" style={{ height: '36px', padding: 0 }} value={cfg.highT || '0.70'} onChange={(e) => setCfg((p) => ({ ...p, highT: e.target.value }))} />
+                            </div>
+                            <div>
+                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>Medium Risk Threshold ({Math.round((parseFloat(cfg.medT)||0.4)*100)}%)</div>
+                                <input type="range" min="0.2" max="0.48" step="0.04" className="inp-lt" style={{ height: '36px', padding: 0 }} value={cfg.medT || '0.40'} onChange={(e) => setCfg((p) => ({ ...p, medT: e.target.value }))} />
+                            </div>
+                        </div>
+                    )}
+
+                    {configTab === 'system' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            {/* System Status / Health Check */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '.85rem' }}>
+                                <div style={{ background: '#F9FAFB', border: '1px solid #E4E7EC', borderRadius: '8px', padding: '.75rem' }}>
+                                    <div style={{ fontSize: '.58rem', color: t.muted, textTransform: 'uppercase', fontFamily: 'JetBrains Mono, monospace' }}>DB Connection</div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', marginTop: '.25rem' }}>
+                                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }}></span>
+                                        <span style={{ fontSize: '.84rem', fontWeight: 600, color: t.text }}>Healthy / Online</span>
+                                    </div>
+                                </div>
+                                <div style={{ background: '#F9FAFB', border: '1px solid #E4E7EC', borderRadius: '8px', padding: '.75rem' }}>
+                                    <div style={{ fontSize: '.58rem', color: t.muted, textTransform: 'uppercase', fontFamily: 'JetBrains Mono, monospace' }}>Database Size</div>
+                                    <div style={{ fontSize: '.84rem', fontWeight: 600, color: t.text, marginTop: '.25rem' }}>18.4 MB</div>
+                                </div>
+                                <div style={{ background: '#F9FAFB', border: '1px solid #E4E7EC', borderRadius: '8px', padding: '.75rem' }}>
+                                    <div style={{ fontSize: '.58rem', color: t.muted, textTransform: 'uppercase', fontFamily: 'JetBrains Mono, monospace' }}>Last Daily Backup</div>
+                                    <div style={{ fontSize: '.84rem', fontWeight: 600, color: t.text, marginTop: '.25rem' }}>Today, 02:00 AM</div>
+                                </div>
+                            </div>
+
+                            {/* Configuration Options */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.875rem' }}>
+                                <div>
+                                    <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>Audit Log Retention</div>
+                                    <select className="inp-lt" style={{ width: '100%', height: '38px' }} value={cfg.dataRetentionDays || '180'} onChange={(e) => setCfg((p) => ({ ...p, dataRetentionDays: e.target.value }))}>
+                                        <option value="90">90 Days</option>
+                                        <option value="180">180 Days (Standard)</option>
+                                        <option value="365">365 Days (Long-term)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <div className="mlbl" style={{ color: t.muted, marginBottom: '.28rem' }}>Auto Database Backups</div>
+                                    <select className="inp-lt" style={{ width: '100%', height: '38px' }} value={cfg.autoBackupEnabled || 'false'} onChange={(e) => setCfg((p) => ({ ...p, autoBackupEnabled: e.target.value }))}>
+                                        <option value="false">Disabled</option>
+                                        <option value="true">Enabled (Daily at 02:00 AM)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Manual Backup Trigger card */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F0FDF4', border: '1px solid #DCFCE7', borderRadius: '8px', padding: '.85rem' }}>
+                                <div>
+                                    <div style={{ fontSize: '.8rem', fontWeight: 600, color: '#166534' }}>Instant Snapshot</div>
+                                    <div style={{ fontSize: '.72rem', color: '#15803d', marginTop: 1 }}>Compile current database state to a local SQL archive dump.</div>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="btn btn-tl"
+                                    onClick={handleTriggerBackup}
+                                    disabled={backingUp}
+                                    style={{ background: '#166534', color: '#fff', fontSize: '.74rem', padding: '.45rem .85rem' }}
+                                >
+                                    {backingUp ? 'Compiling Dump...' : 'Trigger Manual Backup'}
+                                </button>
+                            </div>
+
+                            {/* Recent Backup Archives list */}
+                            <div>
+                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.5rem' }}>Backup Log & History</div>
+                                <div style={{ border: '1px solid #E4E7EC', borderRadius: '8px', overflow: 'hidden' }}>
+                                    <table className="tbl tbl-lt" style={{ margin: 0 }}>
+                                        <thead>
+                                            <tr>
+                                                <th>Archive Name</th>
+                                                <th>Size</th>
+                                                <th>Type</th>
+                                                <th>Created Time</th>
+                                                <th>Status</th>
+                                                <th style={{ textAlign: 'right' }}>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {backupList.map((b, idx) => (
+                                                <tr key={idx}>
+                                                    <td style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '.72rem' }}>{b.name}</td>
+                                                    <td style={{ fontSize: '.75rem' }}>{b.size}</td>
+                                                    <td style={{ fontSize: '.75rem' }}>{b.type}</td>
+                                                    <td style={{ fontSize: '.75rem' }}>{b.date}</td>
+                                                    <td>
+                                                        <span className="lAc" style={{ padding: '.15rem .35rem', borderRadius: '4px', fontSize: '.64rem', fontWeight: 600 }}>{b.status}</span>
+                                                    </td>
+                                                    <td style={{ textAlign: 'right' }}>
+                                                        <div style={{ display: 'inline-flex', gap: '.6rem', alignItems: 'center' }}>
+                                                            <button 
+                                                                type="button"
+                                                                title="Download Archive"
+                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#059669', display: 'flex', alignItems: 'center', padding: '4px' }}
+                                                                onClick={() => handleDownloadBackup(b.name)}
+                                                            >
+                                                                <Download size={14} />
+                                                            </button>
+                                                            <button 
+                                                                type="button"
+                                                                title="Delete Archive"
+                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', display: 'flex', alignItems: 'center', padding: '4px' }}
+                                                                onClick={() => handleDeleteBackup(b.name)}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {cfgSaved && (
+                    <div style={{ color: t.rLow, display: 'flex', alignItems: 'center', gap: '.3rem', fontSize: '.8rem', marginTop: '1rem' }}><Check size={12} /> Configuration saved successfully!</div>
+                )}
+                <button className="btn btn-np" style={{ marginTop: '1.25rem' }} onClick={async () => { 
+                    try {
+                        await adminService.updateGlobalConfig(cfg);
+                        setCfgSaved(true); 
+                        setTimeout(() => setCfgSaved(false), 3000); 
+                    } catch(err) {
+                        alert('Failed to save config');
+                    }
+                }}>
+                    <Save size={13} /> Save Configuration
+                </button>
+            </Card>
+        );

@@ -1,0 +1,101 @@
+import React from 'react';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, CartesianGrid, XAxis, YAxis, Bar, LineChart, Line } from 'recharts';
+import { CH, CT } from '../shared/Primitives';
+
+const Card = ({ children, style }) => (
+    <div className="card-lt" style={style}>
+        {children}
+    </div>
+);
+
+export default function AdminAnalyticsTab({ roleDist, deptCapacity, riskDist, deptRisk, attTrend, t }) {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div>
+                <div style={{ fontSize: '1.28rem', fontWeight: 700, color: t.text }}>Advanced Analytics</div>
+                <div style={{ fontSize: '.78rem', color: t.muted, marginTop: 2 }}>Deep dive into institutional data and AI trends</div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                <Card>
+                    <CH title="Demographic Distribution" sub="Institution-wide user base" />
+                    <div style={{ padding: '1rem' }}>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <PieChart>
+                                <Pie data={roleDist} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value" label>
+                                    {roleDist.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                                </Pie>
+                                <Tooltip />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
+
+                <Card>
+                    <CH title="Department Capacity" sub="Student enrollment count per department" />
+                    <div style={{ padding: '.75rem .25rem .5rem' }}>
+                        <ResponsiveContainer width="100%" height={216}>
+                            <BarChart data={deptCapacity} barSize={24} layout="vertical" margin={{ left: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F7" horizontal={false} />
+                                <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: t.muted }} />
+                                <YAxis type="category" dataKey="dept" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', fill: t.muted }} width={80} />
+                                <Tooltip cursor={{ fill: '#F9FAFB' }} />
+                                <Bar dataKey="students" fill={t.teal} radius={[0, 4, 4, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr 1fr', gap: '1.25rem' }}>
+                <Card>
+                    <CH title="Risk Distribution" sub="AI Generated Real-Time" />
+                    <div style={{ padding: '1rem' }}>
+                        <ResponsiveContainer width="100%" height={145}>
+                            <PieChart>
+                                <Pie data={riskDist} cx="50%" cy="50%" innerRadius={38} outerRadius={64} paddingAngle={3} dataKey="value">
+                                    {riskDist.map((e, i) => <Cell key={i} fill={e.color} />)}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
+
+                <Card>
+                    <CH title="Risk by Department" sub="Stacked count" />
+                    <div style={{ padding: '.75rem .25rem .5rem' }}>
+                        <ResponsiveContainer width="100%" height={196}>
+                            <BarChart data={deptRisk} barSize={18}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F7" />
+                                <XAxis dataKey="dept" tick={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', fill: t.muted }} axisLine={false} tickLine={false} interval={0} />
+                                <YAxis tick={{ fontSize: 10, fill: t.muted }} axisLine={false} tickLine={false} />
+                                <Tooltip content={<CT />} />
+                                <Legend iconSize={8} wrapperStyle={{ fontSize: '.7rem' }} />
+                                <Bar dataKey="high" name="High Risk" fill={t.rHigh} stackId="a" />
+                                <Bar dataKey="med" name="Medium Risk" fill={t.rMed} stackId="a" />
+                                <Bar dataKey="low" name="Low Risk" fill={t.rLow} stackId="a" radius={[3, 3, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
+
+                <Card>
+                    <CH title="Attendance Trend" sub="Institution-wide average %" />
+                    <div style={{ padding: '.75rem .25rem .5rem' }}>
+                        <ResponsiveContainer width="100%" height={196}>
+                            <LineChart data={attTrend}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F7" />
+                                <XAxis dataKey="month" tick={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fill: t.muted }} axisLine={false} tickLine={false} />
+                                <YAxis domain={[60, 100]} tick={{ fontSize: 10, fill: t.muted }} axisLine={false} tickLine={false} />
+                                <Tooltip content={<CT />} />
+                                <Line type="monotone" dataKey="avg" name="Avg Attendance" stroke={t.teal} strokeWidth={2.5} dot={{ r: 4, fill: t.teal }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
+            </div>
+        </div>
+    );
+}

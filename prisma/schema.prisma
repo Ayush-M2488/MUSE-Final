@@ -1,0 +1,408 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String    @unique @db.VarChar(255)
+  password_hash String    @db.VarChar(255)
+  role          String    @db.VarChar(50) // student, teacher, admin
+  full_name     String    @db.VarChar(255)
+  created_at         DateTime? @default(now()) @db.Timestamptz
+  last_login         DateTime? @db.Timestamptz
+  status             String?   @default("active") @db.VarChar(20)
+  reset_token        String?   @db.VarChar(255)
+  reset_token_expiry DateTime? @db.Timestamptz
+
+  // Relations
+  student       Student?
+  faculty       Faculty?
+  admin         Admin?
+  announcements Announcement[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  assignments   Assignment[]
+  mentorship_student MentorshipMessage[] @relation("MentorshipStudent")
+  mentorship_mentor  MentorshipMessage[] @relation("MentorshipMentor")
+  mentorship_sender  MentorshipMessage[] @relation("MentorshipSender")
+  mentees            Student[]           @relation("StudentMentor")
+
+  @@map("users")
+}
+
+model Student {
+  usn               String   @id @db.VarChar(50)
+  user_id           String   @unique @db.Uuid
+  program           String   @db.VarChar(100)
+  department        String   @db.VarChar(100)
+  phone             String?  @db.VarChar(20)
+  semester          Int
+  enrollment_date   DateTime @db.Date
+  mentor_id         String?  @db.Uuid
+  cgpa              Decimal? @default(0.00) @db.Decimal(4, 2)
+  academic_standing String?  @default("Good") @db.VarChar(50)
+
+  // Relations
+  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  enrollments   Enrollment[]
+  attendance    Attendance[]
+  assessments   Assessment[]
+  predictions   Prediction[]
+  interventions Intervention[]
+  fees          Fee[]
+  submissions   AssignmentSubmission[]
+  grievances    Grievance[]
+  mentor        User?          @relation("StudentMentor", fields: [mentor_id], references: [id])
+
+  @@map("students")
+}
+
+model Faculty {
+  emp_id      String  @id @db.VarChar(50)
+  user_id     String  @unique @db.Uuid
+  department  String  @db.VarChar(100)
+  designation String  @db.VarChar(100)
+  is_hod      Boolean @default(false)
+
+  custom_thresholds  Json? @default("{}")
+  notification_prefs Json? @default("{\"emailOnHighRisk\":true,\"autoNotifyAbsentee\":false}")
+  consultation_hours Json? @default("[]")
+
+  // Relations
+  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  enrollments   Enrollment[]
+  attendance    Attendance[]
+  interventions Intervention[]
+  tasks         Task[]
+  timetables    Timetable[]
+  grievances    Grievance[]
+
+  @@map("faculty")
+}
+
+model Admin {
+  admin_id   String @id @db.VarChar(50)
+  user_id    String @unique @db.Uuid
+  department String @db.VarChar(100)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("admins")
+}
+
+model Course {
+  course_code String @id @db.VarChar(50)
+  course_name String @db.VarChar(255)
+  department  String @db.VarChar(100)
+  semester    Int
+  credits     Int
+
+  // Relations
+  enrollments   Enrollment[]
+  attendance    Attendance[]
+  assessments   Assessment[]
+  announcements Announcement[]
+  predictions   Prediction[]
+  timetables    Timetable[]
+  assignments   Assignment[]
+  grievances    Grievance[]
+
+  @@map("courses")
+}
+
+model Enrollment {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usn            String    @db.VarChar(50)
+  course_code    String    @db.VarChar(50)
+  faculty_emp_id String    @db.VarChar(50)
+  section        String    @db.VarChar(10)
+  enrolled_at    DateTime? @default(now()) @db.Timestamptz
+
+  // Relations
+  student Student @relation(fields: [usn], references: [usn], onDelete: Cascade)
+  course  Course  @relation(fields: [course_code], references: [course_code], onDelete: Cascade)
+  faculty Faculty @relation(fields: [faculty_emp_id], references: [emp_id], onDelete: Cascade)
+
+  @@unique([usn, course_code])
+  @@map("enrollments")
+}
+
+model Attendance {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usn         String   @db.VarChar(50)
+  course_code String   @db.VarChar(50)
+  date        DateTime @db.Date
+  status      String   @db.VarChar(20) // present, absent, excused
+  recorded_by String   @db.VarChar(50)
+
+  // Relations
+  student Student @relation(fields: [usn], references: [usn], onDelete: Cascade)
+  course  Course  @relation(fields: [course_code], references: [course_code], onDelete: Cascade)
+  faculty Faculty @relation(fields: [recorded_by], references: [emp_id], onDelete: Cascade)
+
+  @@unique([usn, course_code, date])
+  @@map("attendance")
+}
+
+model Assessment {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usn             String    @db.VarChar(50)
+  course_code     String    @db.VarChar(50)
+  assessment_type String    @db.VarChar(50)
+  score           Decimal   @db.Decimal(5, 2)
+  max_score       Decimal   @db.Decimal(5, 2)
+  recorded_at     DateTime? @default(now()) @db.Timestamptz
+
+  // Relations
+  student Student @relation(fields: [usn], references: [usn], onDelete: Cascade)
+  course  Course  @relation(fields: [course_code], references: [course_code], onDelete: Cascade)
+
+  @@unique([usn, course_code, assessment_type])
+  @@map("assessments")
+}
+
+model Announcement {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title              String    @db.VarChar(255)
+  content            String    @db.Text
+  author_id          String    @db.Uuid
+  target_audience    String    @db.VarChar(50)
+  target_course_code String?   @db.VarChar(50)
+  created_at         DateTime? @default(now()) @db.Timestamptz
+
+  // Relations
+  author User    @relation(fields: [author_id], references: [id])
+  course Course? @relation(fields: [target_course_code], references: [course_code])
+
+  @@map("announcements")
+}
+
+model Notification {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String    @db.Uuid
+  type       String    @db.VarChar(50)
+  content    String    @db.Text
+  is_read    Boolean?  @default(false)
+  created_at DateTime? @default(now()) @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Prediction {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usn              String    @db.VarChar(50)
+  course_code      String?   @db.VarChar(50)
+  risk_level       String    @db.VarChar(20) // Low, Medium, High
+  risk_score       Decimal   @db.Decimal(4, 3)
+  explanation_text String    @db.Text
+  model_version    String    @db.VarChar(50)
+  predicted_at     DateTime? @default(now()) @db.Timestamptz
+
+  // Relations
+  student       Student        @relation(fields: [usn], references: [usn], onDelete: Cascade)
+  course        Course?        @relation(fields: [course_code], references: [course_code])
+  explanations  Explanation[]
+  interventions Intervention[]
+
+  @@map("predictions")
+}
+
+model Explanation {
+  id                 String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  prediction_id      String  @db.Uuid
+  feature_name       String  @db.VarChar(100)
+  feature_value      Decimal @db.Decimal(10, 4)
+  shap_value         Decimal @db.Decimal(10, 4)
+  impact_description String  @db.VarChar(255)
+
+  // Relations
+  prediction Prediction @relation(fields: [prediction_id], references: [id], onDelete: Cascade)
+
+  @@map("explanations")
+}
+
+model Intervention {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usn            String    @db.VarChar(50)
+  faculty_emp_id String    @db.VarChar(50)
+  prediction_id  String?   @db.Uuid
+  action_taken   String    @db.VarChar(255)
+  notes          String?   @db.Text
+  status         String?   @default("open") @db.VarChar(50)
+  created_at     DateTime? @default(now()) @db.Timestamptz
+  updated_at     DateTime? @default(now()) @db.Timestamptz
+
+  // Relations
+  student    Student     @relation(fields: [usn], references: [usn], onDelete: Cascade)
+  faculty    Faculty     @relation(fields: [faculty_emp_id], references: [emp_id], onDelete: Cascade)
+  prediction Prediction? @relation(fields: [prediction_id], references: [id])
+
+  @@map("interventions")
+}
+
+model AuditLog {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String?   @db.Uuid
+  action      String    @db.VarChar(255)
+  entity_type String    @db.VarChar(100)
+  entity_id   String?   @db.VarChar(100)
+  details     Json?     @db.JsonB
+  ip_address  String?   @db.VarChar(45)
+  created_at  DateTime? @default(now()) @db.Timestamptz
+
+  // Relations
+  user User? @relation(fields: [user_id], references: [id])
+
+  @@map("audit_logs")
+}
+
+model Task {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  faculty_emp_id String    @db.VarChar(50)
+  text           String    @db.VarChar(255)
+  due_date       String    @db.VarChar(100)
+  done           Boolean   @default(false)
+  urgent         Boolean   @default(false)
+  created_at     DateTime? @default(now()) @db.Timestamptz
+
+  faculty Faculty @relation(fields: [faculty_emp_id], references: [emp_id], onDelete: Cascade)
+
+  @@map("tasks")
+}
+
+model Timetable {
+  id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  course_code    String @db.VarChar(50)
+  faculty_emp_id String @db.VarChar(50)
+  day_of_week    String @db.VarChar(20) // e.g., "Monday"
+  start_time     String @db.VarChar(10) // e.g., "09:00"
+  end_time       String @db.VarChar(10) // e.g., "10:30"
+  room           String @db.VarChar(50)
+
+  course  Course  @relation(fields: [course_code], references: [course_code], onDelete: Cascade)
+  faculty Faculty @relation(fields: [faculty_emp_id], references: [emp_id], onDelete: Cascade)
+
+  @@map("timetables")
+}
+
+model Fee {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usn         String    @db.VarChar(50)
+  semester    Int
+  amount_due  Decimal   @db.Decimal(10, 2)
+  amount_paid Decimal   @db.Decimal(10, 2)
+  due_date    DateTime? @db.Date
+  status      String    @default("Pending") @db.VarChar(20) // Clear, Pending, Overdue
+  updated_at  DateTime? @default(now()) @db.Timestamptz
+
+  student Student @relation(fields: [usn], references: [usn], onDelete: Cascade)
+
+  @@map("fees")
+}
+
+model SystemConfig {
+  key        String    @id @db.VarChar(50)
+  value      String    @db.Text
+  updated_at DateTime? @default(now()) @db.Timestamptz
+
+  @@map("system_config")
+}
+
+model Assignment {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type            String    @db.VarChar(50) // "self", "student", "personal"
+  title           String    @db.VarChar(255)
+  description     String?   @db.Text
+  due_date        DateTime? @db.Timestamptz
+  priority        String    @default("Medium") @db.VarChar(20) // "Low", "Medium", "High"
+  status          String    @default("pending") @db.VarChar(50) // "pending", "done" (for self)
+  
+  created_by_role String    @db.VarChar(20) // "teacher", "student"
+  author_id       String    @db.Uuid
+  audience        String    @db.VarChar(20) // "self", "student"
+  
+  course_code     String?   @db.VarChar(50)
+  section         String?   @db.VarChar(10)
+  file_name       String?   @db.VarChar(255)
+  file_url        String?   @db.VarChar(500)
+  created_at      DateTime? @default(now()) @db.Timestamptz
+
+  author          User      @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  course          Course?   @relation(fields: [course_code], references: [course_code], onDelete: Cascade)
+  submissions     AssignmentSubmission[]
+
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assignment_id String    @db.Uuid
+  student_usn   String    @db.VarChar(50)
+  status        String    @default("pending") @db.VarChar(50) // "pending", "submitted", "graded"
+  updated_at    DateTime? @default(now()) @db.Timestamptz
+
+  assignment    Assignment @relation(fields: [assignment_id], references: [id], onDelete: Cascade)
+  student       Student    @relation(fields: [student_usn], references: [usn], onDelete: Cascade)
+
+  @@unique([assignment_id, student_usn])
+  @@map("assignment_submissions")
+}
+
+model Holiday {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date           DateTime @db.Date
+  course_code    String?  @db.VarChar(50)
+  faculty_emp_id String?  @db.VarChar(50)
+  description    String?  @db.VarChar(255)
+
+  @@unique([date, course_code, faculty_emp_id])
+  @@map("holidays")
+}
+
+model Grievance {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_usn    String    @db.VarChar(50)
+  target_type    String    @db.VarChar(20) // "admin" or "teacher"
+  target_emp_id  String?   @db.VarChar(50) // null if target_type is admin
+  course_code    String?   @db.VarChar(50) // optional course associated
+  message        String    @db.Text
+  response       String?   @db.Text
+  status         String    @default("pending") @db.VarChar(20) // "pending", "resolved"
+  created_at     DateTime? @default(now()) @db.Timestamptz
+  updated_at     DateTime? @default(now()) @db.Timestamptz
+
+  // Relations
+  student Student  @relation(fields: [student_usn], references: [usn], onDelete: Cascade)
+  faculty Faculty? @relation(fields: [target_emp_id], references: [emp_id], onDelete: Cascade)
+  course  Course?  @relation(fields: [course_code], references: [course_code], onDelete: Cascade)
+
+  @@map("grievances")
+}
+
+model MentorshipMessage {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id String   @db.Uuid
+  mentor_id  String   @db.Uuid
+  sender_id  String   @db.Uuid
+  content    String
+  file_url   String?  @db.VarChar(255)
+  file_name  String?  @db.VarChar(255)
+  sent_at    DateTime @default(now()) @db.Timestamptz
+
+  student    User     @relation("MentorshipStudent", fields: [student_id], references: [id], onDelete: Cascade)
+  mentor     User     @relation("MentorshipMentor", fields: [mentor_id], references: [id], onDelete: Cascade)
+  sender     User     @relation("MentorshipSender", fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@map("mentorship_messages")
+}

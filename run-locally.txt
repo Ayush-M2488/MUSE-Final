@@ -1,0 +1,48 @@
+To run the MUSE project locally, follow the steps below.
+
+The project has two main parts:
+
+Express + Vite Server (runs both the backend API and the frontend client together on port 3000).
+Python AI Service (runs the ML prediction and SHAP explainability engine on port 5000).
+📋 Prerequisites & What Has Been Configured
+I have already done some initial checks and setup directly on your environment:
+
+Node.js dependencies: Verified and fully installed (npm install).
+PostgreSQL database: Verified that a local PostgreSQL instance is running on port 5432 matching your .env connection string (postgresql://postgres:POSTGRES@123@localhost:5432/muse_db).
+Prisma Schema: Synchronized the database schema with your local PostgreSQL server (npx prisma db push).
+Database Seed Data: I fixed an issue in the seed script where repeatedly running it caused a unique key constraint error. I successfully cleared and seeded the database (npm run seed) with default students, courses, a teacher, and an administrator.
+Python Environment: Verified that Python 3.14.2 and the required AI dependencies (flask, scikit-learn, shap, pandas, numpy) are installed and ready.
+🚀 Running the Project Step-by-Step
+Step 1: Start the Web Application (Frontend + Backend)
+The root server acts as a unified hub. It mounts the backend routes under /api/ and mounts Vite as middleware to serve the React SPA on the same port.
+
+Open your terminal at the root directory of the project: c:\Users\ayush\Desktop\final year draft1.
+Run the development command:
+powershell
+npm run dev
+Once running, open your web browser and navigate to: 👉 http://localhost:3000
+Step 2: Start the Python AI Service
+The AI service is required to generate risk predictions and explanations (using SHAP).
+
+Open a new terminal and navigate to the AI service directory:
+powershell
+cd 'c:\Users\ayush\Desktop\final year draft1\muse-ai-service'
+(Optional but recommended) Create and activate a Python virtual environment:
+powershell
+python -m venv venv
+.\venv\Scripts\Activate
+Ensure all Python dependencies are installed (already verified globally, but a good practice for virtual environments):
+powershell
+pip install -r requirements.txt
+Start the Flask AI server:
+powershell
+python -u app.py
+You should see output confirming it successfully loaded the pre-trained v2.0-randomforest model and is serving on http://127.0.0.1:5000.
+🔑 Test Accounts & Credentials
+The database has been seeded with the following default credentials. Use these to log in and test different dashboard interfaces:
+
+Role	Email	Password	Details
+🧑‍🏫 Teacher (Faculty)	priya.nair@muse.ac.in	password123	Dr. Priya Nair (AI & ML Department)
+🧑‍🎓 Student	arjun.s@muse.ac.in	password123	Arjun Sharma (5th Sem, AI & ML)
+⚙️ Administrator	admin@muse.ac.in	password123	System Administrator
+(Other seeded students you can log in as include aarav@muse.ac.in, riya@muse.ac.in, kavya@muse.ac.in, and rohan@muse.ac.in all with password password123)
