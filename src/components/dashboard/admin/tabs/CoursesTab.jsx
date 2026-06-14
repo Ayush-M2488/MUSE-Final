@@ -129,7 +129,8 @@ export default function CoursesTab({ t, setPage, allCourses, setAllCourses, user
                                                                 const newCourses = await adminService.getCourses(1, 1000);
                                                                 setAllCourses(newCourses.courses || newCourses || []);
                                                             } catch (err) {
-                                                                alert('Failed to assign teacher');
+                                                                console.error(err);
+                                                                alert(err.response?.data?.error || `Failed to assign teacher: ${err.message}`);
                                                             }
                                                         }}
                                                     >
