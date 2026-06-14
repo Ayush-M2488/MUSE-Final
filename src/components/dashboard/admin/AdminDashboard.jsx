@@ -71,6 +71,7 @@ export default function AdminDashboard({ page, setPage }) {
     const [users, setUsers] = useState([]);
     const [editUserObj, setEditUserObj] = useState(null);
     const [viewUserObj, setViewUserObj] = useState(null);
+    const [userError, setUserError] = useState('');
     const [nu, setNu] = useState({
         name: '',
         email: '',
@@ -430,18 +431,19 @@ export default function AdminDashboard({ page, setPage }) {
 
 
     const addUser = async () => {
+        setUserError('');
         if (!nu.name.trim() || !nu.email.trim() || (['Student', 'Faculty'].includes(nu.role) && !nu.identifier?.trim())) {
-            alert('Please fill in all required fields (Name, Email, and USN/EmpID)');
+            setUserError('Please fill in all required fields (Name, Email, and USN/EmpID)');
             return;
         }
 
         if (nu.role === 'Student' && !/^[A-Z0-9]{5,15}$/i.test(nu.identifier.trim())) {
-            alert('Invalid USN format. Please enter a valid 5-15 character alphanumeric USN.');
+            setUserError('Invalid USN format. Please enter a valid 5-15 character alphanumeric USN.');
             return;
         }
 
         if (nu.role === 'Faculty' && !/^[A-Z0-9-]{3,15}$/i.test(nu.identifier.trim())) {
-            alert('Invalid Employee ID format. Please enter a valid Employee ID.');
+            setUserError('Invalid Employee ID format. Please enter a valid Employee ID.');
             return;
         }
 
@@ -450,21 +452,22 @@ export default function AdminDashboard({ page, setPage }) {
             const freshUsers = await adminService.getUsers(1, 1000);
             setUsers(freshUsers.users || freshUsers || []);
             setModal(false);
+            setUserError('');
             setNu({ name: '', email: '', role: 'Student', dept: 'AI & ML', status: 'active', semester: '1', subjects: [], identifier: '', phone: '' });
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.error || 'Failed to create user');
+            setUserError(err.response?.data?.error || 'Failed to create user');
         }
     };
 
     const delUser = async (id) => {
-        if (!window.confirm("Are you sure?")) return;
+        if (!window.confirm('Delete this user completely?')) return;
         try {
             await adminService.deleteUser(id);
             setUsers((p) => p.filter((u) => u.id !== id));
-        } catch (err) {
-            console.error(err);
-            alert("Failed to delete user");
+        } catch (error) {
+            console.error(error);
+            alert(error.response?.data?.error || `Failed to delete user: ${error.message}`);
         }
     };
 
@@ -497,12 +500,13 @@ export default function AdminDashboard({ page, setPage }) {
 
 
     const toggleStatus = async (id, currentStatus) => {
-        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         try {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
             await adminService.updateUserStatus(id, newStatus);
             setUsers((p) => p.map((u) => u.id === id ? { ...u, status: newStatus } : u));
-        } catch (err) {
-            alert('Failed to update user status');
+        } catch (error) {
+            console.error(error);
+            alert(error.response?.data?.error || `Failed to change user status: ${error.message}`);
         }
     };
 
@@ -554,9 +558,9 @@ export default function AdminDashboard({ page, setPage }) {
     if (page === 'users')
         return (
             <UserManagementTab
-                modal={modal} setModal={setModal} bulkModal={bulkModal} setBulkModal={setBulkModal}
+                modal={modal} setModal={setModal} userError={userError} setUserError={setUserError} bulkModal={bulkModal} setBulkModal={setBulkModal}
                 csvRows={csvRows} setCsvRows={setCsvRows} bulkImporting={bulkImporting}
-                bulkFeedback={bulkFeedback} nu={nu} setNu={setNu} userFilters={userFilters}
+                bulkFeedback={bulkFeedback} setBulkFeedback={setBulkFeedback} nu={nu} setNu={setNu} userFilters={userFilters}
                 setUserFilters={setUserFilters} filteredUsers={filteredUsers} allCourses={allCourses}
                 addUser={addUser} delUser={delUser} toggleStatus={toggleStatus}
                 handleCsvFile={handleCsvFile} downloadTemplate={downloadTemplate}

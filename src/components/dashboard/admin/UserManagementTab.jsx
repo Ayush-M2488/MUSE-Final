@@ -9,8 +9,8 @@ const Card = ({ children, style }) => (
 );
 
 export default function UserManagementTab({
-    modal, setModal, bulkModal, setBulkModal, csvRows, setCsvRows, 
-    bulkImporting, bulkFeedback, nu, setNu, userFilters, setUserFilters, 
+    modal, setModal, userError, setUserError, bulkModal, setBulkModal, csvRows, setCsvRows, 
+    bulkImporting, bulkFeedback, setBulkFeedback, nu, setNu, userFilters, setUserFilters,
     filteredUsers, allCourses, addUser, delUser, toggleStatus, 
     handleCsvFile, downloadTemplate, submitBulkUsers, openEditUser, openViewUser, t
 }) {
@@ -19,12 +19,12 @@ export default function UserManagementTab({
             {modal && (
                 <div
                     style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.82)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
-                    onClick={(e) => e.target === e.currentTarget && setModal(false)}
+                    onClick={(e) => { if (e.target === e.currentTarget) { setModal(false); setUserError(''); } }}
                 >
                     <div className="modal-lt" style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 14, width: '100%', maxWidth: 490 }}>
                         <div style={{ padding: '1.1rem 1.25rem', borderBottom: '1px solid #E4E7EC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ fontWeight: 600, color: t.text }}>Add New User</div>
-                            <button onClick={() => setModal(false)}><X size={17} /></button>
+                            <button onClick={() => { setModal(false); setUserError(''); }}><X size={17} /></button>
                         </div>
 
                         <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '.875rem' }}>
@@ -97,9 +97,15 @@ export default function UserManagementTab({
                                     </div>
                                 </>
                             )}
+                            {userError && (
+                                <div style={{ padding: '.5rem .75rem', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 8, color: '#DC2626', fontSize: '.75rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                                    <XCircle size={14} />
+                                    {userError}
+                                </div>
+                            )}
                             <div style={{ display: 'flex', gap: '.75rem', marginTop: '.25rem' }}>
                                 <button className="btn btn-np" style={{ flex: 1 }} onClick={addUser}><UserPlus size={13} />Add User</button>
-                                <button className="btn btn-ng" style={{ flex: 1 }} onClick={() => setModal(false)}>Cancel</button>
+                                <button className="btn btn-ng" style={{ flex: 1 }} onClick={() => { setModal(false); setUserError(''); }}>Cancel</button>
                             </div>
                         </div>
                     </div>
