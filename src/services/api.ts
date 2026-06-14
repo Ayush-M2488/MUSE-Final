@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-    baseURL: '/api', // Points to our Express server
+    baseURL: import.meta.env.VITE_API_URL || '/api', // Points to our Express server
     headers: { 'Content-Type': 'application/json' },
 });
 
