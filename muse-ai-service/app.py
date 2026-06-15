@@ -75,19 +75,33 @@ def predict():
                     impact_text = f"Impacted prediction by {'increasing' if s_val > 0 else 'decreasing'} likelihood."
                     
                     if pred_class > 0: # Medium/High risk
-                        if f_name == 'Attendance' and f_val < 75:
-                            impact_text = f"Low attendance ({f_val}%) strongly increased risk."
-                        elif 'IA' in f_name and f_val < 10:
-                            impact_text = f"Poor {f_name} score ({f_val}) contributed to risk."
-                        elif s_val > 0:
-                            impact_text = f"Metric {f_name} ({f_val}) increased risk profile."
+                        # explicitly check if the metric is actually good!
+                        if f_name == 'Attendance' and f_val >= 75:
+                            impact_text = f"Good attendance ({f_val}%) helped mitigate overall risk."
+                        elif 'IA' in f_name and f_val >= 20:
+                            impact_text = f"Strong {f_name} score ({f_val}) helped prevent higher risk."
+                        elif f_name == 'Practical' and f_val >= 12:
+                            impact_text = f"Good practical marks ({f_val}) helped mitigate overall risk."
+                        elif f_name == 'CGPA' and f_val >= 6.0:
+                            impact_text = f"Good CGPA ({f_val}) helped mitigate overall risk."
                         else:
-                            impact_text = f"Metric {f_name} ({f_val}) slightly mitigated risk."
+                            if f_name == 'Attendance' and f_val < 75:
+                                impact_text = f"Low attendance ({f_val}%) strongly increased risk."
+                            elif 'IA' in f_name and f_val < 15:
+                                impact_text = f"Poor {f_name} score ({f_val}) contributed to risk."
+                            elif s_val > 0:
+                                impact_text = f"Metric {f_name} ({f_val}) increased risk profile."
+                            else:
+                                impact_text = f"Metric {f_name} ({f_val}) slightly mitigated risk."
                     else: # Low risk
-                        if f_name == 'Attendance' and f_val >= 85:
+                        if f_name == 'Attendance' and f_val >= 75:
                             impact_text = f"High attendance ({f_val}%) secured low risk standing."
-                        elif 'IA' in f_name and f_val >= 18:
+                        elif 'IA' in f_name and f_val >= 20:
                             impact_text = f"Strong {f_name} score ({f_val}) ensured low risk."
+                        elif f_name == 'Practical' and f_val >= 12:
+                            impact_text = f"Good practical score ({f_val}) ensured low risk."
+                        elif f_name == 'CGPA' and f_val >= 6.0:
+                            impact_text = f"Good CGPA ({f_val}) ensured low risk."
                         elif s_val > 0:
                             impact_text = f"Metric {f_name} ({f_val}) secured low risk."
                         else:
