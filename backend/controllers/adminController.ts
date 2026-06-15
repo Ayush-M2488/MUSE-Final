@@ -1264,10 +1264,10 @@ export const getRiskRoster: RequestHandler = async (req, res, next) => {
             const ia3Find = s.assessments.find(a => a.assessment_type === 'IA-3');
             const practicalFind = s.assessments.find(a => a.assessment_type === 'Practical');
             
-            if (ia1Find) { totalMarks += ia1Find.score.toNumber(); maxMarks += 50; }
-            if (ia2Find) { totalMarks += ia2Find.score.toNumber(); maxMarks += 50; }
-            if (ia3Find) { totalMarks += ia3Find.score.toNumber(); maxMarks += 50; }
-            if (practicalFind) { totalMarks += practicalFind.score.toNumber(); maxMarks += 50; }
+            if (ia1Find) { totalMarks += ia1Find.score.toNumber(); maxMarks += 30; }
+            if (ia2Find) { totalMarks += ia2Find.score.toNumber(); maxMarks += 30; }
+            if (ia3Find) { totalMarks += ia3Find.score.toNumber(); maxMarks += 30; }
+            if (practicalFind) { totalMarks += practicalFind.score.toNumber(); maxMarks += 20; }
             
             const marksPercent = maxMarks > 0 ? (totalMarks / maxMarks) * 100 : 100;
             const rawHealth = (attendancePercent * 0.5) + (marksPercent * 0.5);

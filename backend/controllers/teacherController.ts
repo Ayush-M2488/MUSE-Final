@@ -328,10 +328,10 @@ export const getCourseStudents: RequestHandler = async (req, res, next) => {
             
             let totalMarks = 0;
             let maxMarks = 0;
-            if (ia1 !== null) { totalMarks += ia1; maxMarks += 50; }
-            if (ia2 !== null) { totalMarks += ia2; maxMarks += 50; }
-            if (ia3 !== null) { totalMarks += ia3; maxMarks += 50; }
-            if (practical !== null) { totalMarks += practical; maxMarks += 50; }
+            if (ia1 !== null) { totalMarks += ia1; maxMarks += 30; }
+            if (ia2 !== null) { totalMarks += ia2; maxMarks += 30; }
+            if (ia3 !== null) { totalMarks += ia3; maxMarks += 30; }
+            if (practical !== null) { totalMarks += practical; maxMarks += 20; }
             const marksPercent = maxMarks > 0 ? (totalMarks / maxMarks) * 100 : 100;
             
             const rawHealth = (attendance_percentage * 0.5) + (marksPercent * 0.5);
