@@ -88,11 +88,15 @@ export default function AssignmentsTab({ dashboardData }) {
         if (!assignData.title) return alert("Title is required");
         setSavingAssign(true);
         try {
-           const newA = await assignmentService.create({
+           const payload = {
              ...assignData,
              type: assignTab,
              audience: assignTab
-           });
+           };
+           if (payload.due_date) {
+               payload.due_date = new Date(payload.due_date).toISOString();
+           }
+           const newA = await assignmentService.create(payload);
            setAssignments([newA, ...assignments]);
            setAssignModal(false);
            setAssignData({ title: '', description: '', due_date: '', priority: 'Medium', course_code: '', file_name: '', file_data: '' });
