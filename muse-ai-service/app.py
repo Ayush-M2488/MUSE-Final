@@ -107,10 +107,34 @@ def predict():
                         else:
                             impact_text = f"Metric {f_name} ({f_val}) slightly deviated from ideal."
 
+                    # CORRECT SHAP SIGNS FOR UI
+                    # If a student is Medium/High risk, a positive SHAP for the predicted class
+                    # mathematically means "it pushed them into this class instead of another".
+                    # If the score is GOOD, it pushed them up from a worse class.
+                    # But the UI assumes SHAP > 0 = RED/BAD. So we forcefully invert the sign
+                    # for good scores so the UI renders them as Green/Mitigating.
+                    corrected_shap = float(s_val)
+                    if pred_class > 0:
+                        if (f_name == 'Attendance' and f_val >= 75) or \
+                           ('IA' in f_name and f_val >= 20) or \
+                           (f_name == 'Practical' and f_val >= 12) or \
+                           (f_name == 'CGPA' and f_val >= 6.0):
+                            corrected_shap = -abs(corrected_shap) # Force negative (Green)
+                        else:
+                            corrected_shap = abs(corrected_shap) # Force positive (Red)
+                    else: # Low Risk
+                        if (f_name == 'Attendance' and f_val >= 75) or \
+                           ('IA' in f_name and f_val >= 20) or \
+                           (f_name == 'Practical' and f_val >= 12) or \
+                           (f_name == 'CGPA' and f_val >= 6.0):
+                            corrected_shap = abs(corrected_shap) # Force positive (Green in Low Risk)
+                        else:
+                            corrected_shap = -abs(corrected_shap) # Force negative (Red in Low Risk)
+
                     explanations.append({
                         "feature": f_name, 
                         "value": float(f_val), 
-                        "shap": float(s_val), 
+                        "shap": corrected_shap, 
                         "impact": impact_text
                     })
                     
