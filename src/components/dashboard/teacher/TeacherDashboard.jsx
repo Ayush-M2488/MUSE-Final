@@ -432,7 +432,8 @@ export default function TeacherDashboard({ page, setPage }) {
       setPredictions(preds);
       alert('AI Analysis complete!');
     } catch (err) {
-      alert('Failed to run AI analysis.');
+      console.error(err);
+      alert(err.response?.data?.error || 'Failed to run AI analysis.');
     } finally {
       setRunningAI(false);
     }

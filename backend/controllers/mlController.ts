@@ -137,9 +137,9 @@ export const generateCoursePredictions: RequestHandler = async (req, res, next) 
         }
 
         res.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
         console.error('ML Error:', error);
-        res.status(500).json({ error: 'Failed to generate predictions' });
+        res.status(500).json({ error: `Failed to generate predictions: ${error.message}` });
     }
 };
 
