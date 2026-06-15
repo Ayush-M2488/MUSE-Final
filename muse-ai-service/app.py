@@ -31,16 +31,30 @@ def predict():
 
     for s in students:
         att = float(s.get('attendance', 100))
+        # PREDICTIVE IMPUTATION LOGIC
         ia1_val = s.get('ia1')
-        ia1 = float(ia1_val) if (ia1_val is not None and ia1_val != '') else 30.0
         ia2_val = s.get('ia2')
-        ia2 = float(ia2_val) if (ia2_val is not None and ia2_val != '') else 30.0
         ia3_val = s.get('ia3')
-        ia3 = float(ia3_val) if (ia3_val is not None and ia3_val != '') else 30.0
         prac_val = s.get('practical')
-        practical = float(prac_val) if (prac_val is not None and prac_val != '') else 20.0
+        
+        # Parse available IAs
+        available_ias = []
+        if ia1_val is not None and ia1_val != '': available_ias.append(float(ia1_val))
+        if ia2_val is not None and ia2_val != '': available_ias.append(float(ia2_val))
+        if ia3_val is not None and ia3_val != '': available_ias.append(float(ia3_val))
+        
+        # Calculate student's average IA score, fallback to neutral 22.0 if no IAs taken
+        ia_mean = sum(available_ias) / len(available_ias) if available_ias else 22.0
+        
+        ia1 = float(ia1_val) if (ia1_val is not None and ia1_val != '') else ia_mean
+        ia2 = float(ia2_val) if (ia2_val is not None and ia2_val != '') else ia_mean
+        ia3 = float(ia3_val) if (ia3_val is not None and ia3_val != '') else ia_mean
+        
+        # Practical fallback to neutral 14.0 (out of 20) if missing
+        practical = float(prac_val) if (prac_val is not None and prac_val != '') else 14.0
+        
         cgpa_val = s.get('cgpa')
-        cgpa = float(cgpa_val) if (cgpa_val is not None and cgpa_val != '') else 8.0
+        cgpa = float(cgpa_val) if (cgpa_val is not None and cgpa_val != '') else 7.0
         
         explanations = []
 
