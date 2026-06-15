@@ -32,11 +32,11 @@ def predict():
     for s in students:
         att = float(s.get('attendance', 100))
         ia1_val = s.get('ia1')
-        ia1 = float(ia1_val) if (ia1_val is not None and ia1_val != '') else 20.0
+        ia1 = float(ia1_val) if (ia1_val is not None and ia1_val != '') else 30.0
         ia2_val = s.get('ia2')
-        ia2 = float(ia2_val) if (ia2_val is not None and ia2_val != '') else 20.0
+        ia2 = float(ia2_val) if (ia2_val is not None and ia2_val != '') else 30.0
         ia3_val = s.get('ia3')
-        ia3 = float(ia3_val) if (ia3_val is not None and ia3_val != '') else 20.0
+        ia3 = float(ia3_val) if (ia3_val is not None and ia3_val != '') else 30.0
         prac_val = s.get('practical')
         practical = float(prac_val) if (prac_val is not None and prac_val != '') else 20.0
         cgpa_val = s.get('cgpa')

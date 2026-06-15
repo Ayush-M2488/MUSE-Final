@@ -14,10 +14,10 @@ n_samples = 2000
 attendance = np.random.normal(82, 12, n_samples).clip(0, 100)
 cgpa = np.random.normal(7.5, 1.2, n_samples).clip(0, 10)
 
-# IA Marks (out of 20 typically)
-ia1 = np.random.normal(16, 4, n_samples).clip(0, 20)
-ia2 = np.random.normal(15, 4, n_samples).clip(0, 20)
-ia3 = np.random.normal(17, 3, n_samples).clip(0, 20)
+# IA Marks (out of 30 typically)
+ia1 = np.random.normal(24, 4, n_samples).clip(0, 30)
+ia2 = np.random.normal(22, 5, n_samples).clip(0, 30)
+ia3 = np.random.normal(25, 4, n_samples).clip(0, 30)
 
 # Practical Marks (out of 20 typically)
 practical = np.random.normal(16, 3, n_samples).clip(0, 20)
@@ -34,10 +34,10 @@ for i in range(n_samples):
 def assign_risk(att, i1, i2, i3, prac, c):
     total_ia = i1 + i2 + i3
     # High Risk: Critical attendance OR failing multiple components OR terrible CGPA
-    if att < 65 or total_ia < 25 or prac < 8 or c < 4.0:
+    if att < 65 or total_ia < 35 or prac < 8 or c < 4.0:
         return 2 
     # Medium Risk: Warning attendance OR struggling academically
-    elif att < 75 or total_ia < 35 or prac < 12 or c < 6.0:
+    elif att < 75 or total_ia < 50 or prac < 12 or c < 6.0:
         return 1
     # Low Risk: Doing fine
     else:
