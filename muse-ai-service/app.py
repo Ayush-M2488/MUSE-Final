@@ -38,7 +38,7 @@ def predict():
         ia3_val = s.get('ia3')
         ia3 = float(ia3_val) if (ia3_val is not None and ia3_val != '') else 20.0
         prac_val = s.get('practical')
-        practical = float(prac_val) if (prac_val is not None and prac_val != '') else 40.0
+        practical = float(prac_val) if (prac_val is not None and prac_val != '') else 20.0
         cgpa_val = s.get('cgpa')
         cgpa = float(cgpa_val) if (cgpa_val is not None and cgpa_val != '') else 8.0
         
