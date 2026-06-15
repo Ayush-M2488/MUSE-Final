@@ -129,28 +129,17 @@ def predict():
                             impact_text = f"Metric {f_name} ({f_val}) slightly deviated from ideal."
 
                     # CORRECT SHAP SIGNS FOR UI
-                    # If a student is Medium/High risk, a positive SHAP for the predicted class
-                    # mathematically means "it pushed them into this class instead of another".
-                    # If the score is GOOD, it pushed them up from a worse class.
-                    # But the UI assumes SHAP > 0 = RED/BAD. So we forcefully invert the sign
-                    # for good scores so the UI renders them as Green/Mitigating.
+                    # The UI universally assumes SHAP < 0 is GREEN (Left) and SHAP > 0 is RED (Right).
+                    # We forcefully override the mathematical SHAP signs to ensure good scores
+                    # always map to Green, and bad scores always map to Red.
                     corrected_shap = float(s_val)
-                    if pred_class > 0:
-                        if ('Attendance' in f_name and f_val >= 75) or \
-                           ('IA' in f_name and f_val >= 20) or \
-                           ('Practical' in f_name and f_val >= 12) or \
-                           ('SGPA' in f_name and f_val >= 6.0):
-                            corrected_shap = -abs(corrected_shap) # Force negative (Green)
-                        else:
-                            corrected_shap = abs(corrected_shap) # Force positive (Red)
-                    else: # Low Risk
-                        if ('Attendance' in f_name and f_val >= 75) or \
-                           ('IA' in f_name and f_val >= 20) or \
-                           ('Practical' in f_name and f_val >= 12) or \
-                           ('SGPA' in f_name and f_val >= 6.0):
-                            corrected_shap = abs(corrected_shap) # Force positive (Green in Low Risk)
-                        else:
-                            corrected_shap = -abs(corrected_shap) # Force negative (Red in Low Risk)
+                    if ('Attendance' in f_name and f_val >= 75) or \
+                       ('IA' in f_name and f_val >= 20) or \
+                       ('Practical' in f_name and f_val >= 12) or \
+                       ('SGPA' in f_name and f_val >= 6.0):
+                        corrected_shap = -abs(corrected_shap) # Force negative (Green / Left)
+                    else:
+                        corrected_shap = abs(corrected_shap) # Force positive (Red / Right)
 
                     explanations.append({
                         "feature": f_name, 
