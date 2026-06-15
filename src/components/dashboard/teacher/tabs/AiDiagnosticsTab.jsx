@@ -1,8 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { DK as t } from '../../shared/theme';
 import { CH, Loader } from '../../shared/Primitives';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine, Rectangle, LabelList } from 'recharts';
 import { BrainCircuit, AlertTriangle, ShieldCheck, Info } from 'lucide-react';
+
+const CustomBarShape = (props) => {
+    const { fill, x, y, width, height, payload } = props;
+    const isNegative = payload.value < 0;
+    const radius = isNegative ? [4, 0, 0, 4] : [0, 4, 4, 0];
+    return <Rectangle x={x} y={y} width={width} height={height} fill={fill} radius={radius} />;
+};
 
 export default function AiDiagnosticsTab({ C, courseStudents, predictions, runningAI, handleRunAI, renderCourseTabs }) {
     const [selectedUsn, setSelectedUsn] = useState('');
@@ -41,23 +48,23 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
             .sort((a, b) => Math.abs(b.shap) - Math.abs(a.shap))
             .map(exp => ({
                 name: exp.feature,
-                value: parseFloat(exp.shap.toFixed(3)),
+                value: parseFloat(exp.shap.toFixed(4)),
                 rawValue: exp.value,
                 impactText: exp.impact
             }));
     }, [selectedPrediction]);
 
     const generateAISummary = (prediction) => {
-        if (!prediction || !prediction.factors || prediction.factors.length === 0) 
+        if (!prediction || !prediction.factors || prediction.factors.length === 0)
             return "No Explainable AI (SHAP) data available for this prediction.";
-        
+
         const sorted = [...prediction.factors].sort((a, b) => Math.abs(b.shap) - Math.abs(a.shap));
         const topFactor = sorted[0];
         const topPositive = sorted.find(f => f.shap > 0);
         const topNegative = sorted.find(f => f.shap < 0);
 
         let summary = `The AI Engine classified this student's trajectory as `;
-        
+
         if (prediction.risk_level === 'High') {
             summary += `<strong style="color: ${t.rHigh}">Critical Intervention Needed</strong>. `;
         } else if (prediction.risk_level === 'Medium') {
@@ -97,7 +104,7 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                     </div>
                     <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>
                         <span style={{ color: t.muted }}>Forecast Impact:</span> <span style={{ fontWeight: 600, color: isPositive ? t.rHigh : t.teal }}>
-                            {isPositive ? '+' : ''}{data.value}
+                            {isPositive ? '+' : ''}{data.value.toFixed(4)}
                         </span>
                     </div>
                     <div style={{ fontSize: '0.8rem', color: t.muted, fontStyle: 'italic', lineHeight: '1.4' }}>
@@ -112,10 +119,10 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <CH 
-                    title="Explainable AI Diagnostics (SHAP)" 
-                    sub="Understand exactly why the Random Forest model assigned a specific AI forecast" 
-                    dk 
+                <CH
+                    title="Explainable AI Diagnostics (SHAP)"
+                    sub="Understand exactly why the Random Forest model assigned a specific AI forecast"
+                    dk
                 />
                 {predictions && predictions.length > 0 && (
                     <button className="btn btn-wh" onClick={() => handleRunAI(C?.code || 'all')} disabled={runningAI}>
@@ -143,13 +150,13 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '1.25rem', alignItems: 'start' }}>
-                    
+
                     {/* Left Column: Student Selector & Summary */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                         <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: `1px solid ${t.border}`, padding: '1.5rem' }}>
                             <div style={{ fontSize: '0.85rem', color: t.muted, marginBottom: '0.5rem', fontWeight: 500 }}>Select Student to Diagnose</div>
-                            <select 
-                                className="inp-dk" 
+                            <select
+                                className="inp-dk"
                                 style={{ width: '100%', marginBottom: '1rem', cursor: 'pointer' }}
                                 value={selectedUsn}
                                 onChange={(e) => setSelectedUsn(e.target.value)}
@@ -164,12 +171,12 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                             {selectedPrediction && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
 
-                                    
+
                                     <div>
                                         <div style={{ fontSize: '0.85rem', color: t.muted, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                             <BrainCircuit size={14} /> AI Synthesis
                                         </div>
-                                        <div 
+                                        <div
                                             style={{ fontSize: '0.9rem', lineHeight: '1.6', color: t.text }}
                                             dangerouslySetInnerHTML={{ __html: generateAISummary(selectedPrediction) }}
                                         />
@@ -199,8 +206,8 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                             <div>
                                 <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: t.text, marginBottom: '0.25rem' }}>SHAP Impact Visualization</h3>
                                 <p style={{ fontSize: '0.85rem', color: t.muted }}>
-                                    Bars extending to the right <strong style={{color: t.rHigh}}>(Red)</strong> push toward risk.<br/>
-                                    Bars extending to the left <strong style={{color: t.teal}}>(Green)</strong> protect the standing.
+                                    Bars extending to the right <strong style={{ color: t.rHigh }}>(Red)</strong> push toward risk.<br />
+                                    Bars extending to the left <strong style={{ color: t.teal }}>(Green)</strong> protect the standing.
                                 </p>
                             </div>
                             <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: t.muted }}>
@@ -222,30 +229,38 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                                         margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" stroke={t.border} horizontal={true} vertical={true} />
-                                        <XAxis 
-                                            type="number" 
-                                            domain={['dataMin - 0.1', 'dataMax + 0.1']} 
-                                            tickFormatter={(val) => val > 0 ? `+${val}` : val}
+                                        <XAxis
+                                            type="number"
+                                            domain={['dataMin - 0.15', 'dataMax + 0.15']}
+                                            tickFormatter={(val) => val > 0 ? `+${val.toFixed(4)}` : val.toFixed(4)}
                                             stroke={t.muted}
                                             fontSize={12}
                                         />
-                                        <YAxis 
-                                            type="category" 
-                                            dataKey="name" 
+                                        <YAxis
+                                            type="category"
+                                            dataKey="name"
                                             stroke={t.text}
                                             fontSize={13}
                                             fontWeight={500}
                                             width={100}
                                         />
-                                        <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+                                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                                         <ReferenceLine x={0} stroke={t.muted} strokeWidth={2} />
-                                        <Bar dataKey="value" radius={[4, 4, 4, 4]} barSize={32}>
+                                        <Bar dataKey="value" shape={<CustomBarShape />} barSize={32}>
                                             {chartData.map((entry, index) => (
-                                                <Cell 
-                                                    key={`cell-${index}`} 
-                                                    fill={entry.value > 0 ? t.rHigh : t.teal} 
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={entry.value > 0 ? t.rHigh : t.teal}
                                                 />
                                             ))}
+                                            <LabelList 
+                                                dataKey="value" 
+                                                position="outside" 
+                                                formatter={(val) => val > 0 ? `+${val.toFixed(4)}` : val.toFixed(4)} 
+                                                fill={t.text} 
+                                                fontSize={11} 
+                                                fontWeight={500}
+                                            />
                                         </Bar>
                                     </BarChart>
                                 </ResponsiveContainer>
