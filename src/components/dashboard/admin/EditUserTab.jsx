@@ -153,18 +153,20 @@ export default function EditUserTab({ user, setPage, setUsers, t }) {
                     </div>
 
                     {/* Account Settings */}
-                    <div>
-                        <div style={{ fontSize: '1rem', fontWeight: 600, color: t.text, marginBottom: '1rem', paddingBottom: '.5rem', borderBottom: `1px solid ${t.border}` }}>Account Settings</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem' }}>
-                            <div>
-                                <div className="mlbl" style={{ color: t.muted, marginBottom: '.4rem' }}>Account Status</div>
-                                <select className="inp-lt" style={{ padding: '.6rem .8rem' }} value={formData.status} onChange={(e) => setFormData((p) => ({ ...p, status: e.target.value }))}>
-                                    <option value="active">Active (Access Granted)</option>
-                                    <option value="inactive">Inactive (Access Revoked)</option>
-                                </select>
+                    {formData.role !== 'Admin' && (
+                        <div>
+                            <div style={{ fontSize: '1rem', fontWeight: 600, color: t.text, marginBottom: '1rem', paddingBottom: '.5rem', borderBottom: `1px solid ${t.border}` }}>Account Settings</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem' }}>
+                                <div>
+                                    <div className="mlbl" style={{ color: t.muted, marginBottom: '.4rem' }}>Account Status</div>
+                                    <select className="inp-lt" style={{ padding: '.6rem .8rem' }} value={formData.status} onChange={(e) => setFormData((p) => ({ ...p, status: e.target.value }))}>
+                                        <option value="active">Active (Access Granted)</option>
+                                        <option value="inactive">Inactive (Access Revoked)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderTop: `1px solid ${t.border}`, paddingTop: '1.5rem' }}>
                         <button 
