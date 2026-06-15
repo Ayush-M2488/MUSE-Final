@@ -284,7 +284,11 @@ export default function UserManagementTab({
                                         <button className="btn btn-dr" style={{ padding: '.22rem .42rem', color: t.teal, border: 'none', background: 'rgba(20, 184, 166, 0.1)' }} onClick={(e) => { e.stopPropagation(); openEditUser(u); }} title="Edit User">
                                             <Edit2 size={11} />
                                         </button>
-                                        <button className="btn btn-dr" style={{ padding: '.22rem .42rem' }} onClick={(e) => { e.stopPropagation(); delUser(u.id); }}><Trash2 size={11} /></button>
+                                        {u.role !== 'admin' && (
+                                            <button className="btn btn-dr" style={{ padding: '.22rem .42rem' }} onClick={(e) => { e.stopPropagation(); delUser(u.id); }}>
+                                                <Trash2 size={11} />
+                                            </button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>

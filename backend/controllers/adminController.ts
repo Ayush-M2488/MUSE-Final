@@ -7,7 +7,7 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-        
+
         // Total Students
         const totalStudents = await prisma.student.count();
         const pastStudents = await prisma.student.count({
@@ -20,19 +20,19 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
         // Avg Attendance (Last 7 days vs previous 7 days)
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-        
+
         const recentAtt = await prisma.attendance.findMany({ where: { date: { gte: sevenDaysAgo } } });
         const recentPresent = recentAtt.filter(a => a.status === 'present').length;
         const recentAvg = recentAtt.length > 0 ? (recentPresent / recentAtt.length) * 100 : 0;
-        
+
         const pastAtt = await prisma.attendance.findMany({ where: { date: { gte: fourteenDaysAgo, lt: sevenDaysAgo } } });
         const pastPresent = pastAtt.filter(a => a.status === 'present').length;
         const pastAvg = pastAtt.length > 0 ? (pastPresent / pastAtt.length) * 100 : 0;
-        
+
         const totalAttCount = await prisma.attendance.count();
         const presentAttCount = await prisma.attendance.count({ where: { status: 'present' } });
         const avgAttendance = totalAttCount > 0 ? (presentAttCount / totalAttCount) * 100 : 0;
-        
+
         const attDiff = (recentAvg - pastAvg).toFixed(1);
         const attDelta = recentAtt.length > 0 && pastAtt.length > 0 ? `${parseFloat(attDiff) > 0 ? '+' : ''}${attDiff}% from last week` : 'Insufficient data';
         const attUp = recentAvg >= pastAvg;
@@ -43,7 +43,7 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
             distinct: ['usn']
         });
         const highRisk = highRiskPredictions.length;
-        
+
         const pastHighRiskPredictions = await prisma.prediction.findMany({
             where: { risk_level: 'High', predicted_at: { lt: thirtyDaysAgo } },
             distinct: ['usn']
@@ -52,7 +52,7 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
         const riskDiff = highRisk - pastHighRisk;
         const riskDelta = riskDiff > 0 ? `+${riskDiff} vs last month` : riskDiff < 0 ? `${riskDiff} vs last month` : 'No change';
         const riskUp = riskDiff <= 0; // Less risk is good
-        
+
         // Interventions
         const currentInterventions = await prisma.intervention.count({
             where: { created_at: { gte: thirtyDaysAgo } }
@@ -61,7 +61,7 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
             where: { created_at: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } }
         });
         const interventions = await prisma.intervention.count();
-        
+
         const intDiff = currentInterventions - pastInterventions;
         const intDelta = intDiff > 0 ? `+${intDiff} vs last month` : intDiff < 0 ? `${intDiff} vs last month` : 'No change';
         const intUp = intDiff >= 0;
@@ -78,17 +78,17 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
 
         let totalHigh = 0, totalMed = 0, totalLow = 0;
         const deptRiskMap: Record<string, { dept: string, high: number, med: number, low: number }> = {};
-        
+
         students.forEach(s => {
             const risk = s.predictions.length > 0 ? s.predictions[0].risk_level : 'Low';
-            
+
             if (risk === 'High') totalHigh++;
             else if (risk === 'Medium') totalMed++;
             else totalLow++;
 
             const dept = s.department;
             if (!deptRiskMap[dept]) deptRiskMap[dept] = { dept, high: 0, med: 0, low: 0 };
-            
+
             if (risk === 'High') deptRiskMap[dept].high++;
             else if (risk === 'Medium') deptRiskMap[dept].med++;
             else deptRiskMap[dept].low++;
@@ -106,10 +106,10 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
         const allAttendance = await prisma.attendance.findMany({
             select: { date: true, status: true }
         });
-        
+
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const attTrendMap: Record<string, { total: number, present: number, monthIdx: number }> = {};
-        
+
         allAttendance.forEach(a => {
             const mIdx = a.date.getMonth();
             const month = monthNames[mIdx];
@@ -117,7 +117,7 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
             attTrendMap[month].total++;
             if (a.status === 'present') attTrendMap[month].present++;
         });
-        
+
         const attTrend = Object.values(attTrendMap)
             .sort((a, b) => a.monthIdx - b.monthIdx)
             .map(x => ({
@@ -165,7 +165,7 @@ export const getUsers: RequestHandler = async (req, res, next) => {
         const skip = (page - 1) * limit;
 
         const whereClause: any = {};
-        
+
         if (roleFilter !== 'All') {
             whereClause.role = roleFilter.toLowerCase();
         }
@@ -198,7 +198,7 @@ export const getUsers: RequestHandler = async (req, res, next) => {
             skip,
             take: limit
         });
-        
+
         const mappedUsers = users.map(u => {
             let dept = 'N/A';
             let semester = null;
@@ -215,7 +215,7 @@ export const getUsers: RequestHandler = async (req, res, next) => {
             } else if (u.admin) {
                 dept = u.admin.department;
             }
-            
+
             return {
                 id: u.id,
                 name: u.full_name,
@@ -232,7 +232,7 @@ export const getUsers: RequestHandler = async (req, res, next) => {
                 is_hod: u.faculty?.is_hod || false
             };
         });
-        
+
         res.json({
             users: mappedUsers,
             pagination: {
@@ -303,7 +303,7 @@ export const createUser: RequestHandler = async (req, res, next) => {
         }
 
         const normalizedRole = role.toLowerCase() === 'faculty' ? 'teacher' : role.toLowerCase();
-        
+
         if (normalizedRole === 'student' && identifier) {
             const existingStudent = await prisma.student.findUnique({ where: { usn: identifier.trim() } });
             if (existingStudent) {
@@ -319,7 +319,7 @@ export const createUser: RequestHandler = async (req, res, next) => {
         }
 
         const passwordHash = await bcrypt.hash('password123', 10);
-        
+
         const user = await prisma.user.create({
             data: {
                 email,
@@ -329,7 +329,7 @@ export const createUser: RequestHandler = async (req, res, next) => {
                 status
             }
         });
-        
+
         // Normalize role name: Admin UI might send 'faculty', but system expects 'teacher'
         if (role.toLowerCase() === 'student') {
             if (!identifier) {
@@ -378,21 +378,21 @@ export const createUser: RequestHandler = async (req, res, next) => {
 
             if (subjects) {
                 const courseCodes = Array.isArray(subjects) ? subjects : subjects.split(',').map((s: string) => s.trim()).filter(Boolean);
-                
+
                 if (courseCodes.length > 0) {
                     for (const cc of courseCodes) {
                         const courseRecord = await prisma.course.findUnique({
                             where: { course_code: cc }
                         });
-                        
+
                         if (courseRecord) {
                             const students = await prisma.student.findMany({
-                                where: { 
-                                    department: courseRecord.department, 
-                                    semester: courseRecord.semester 
+                                where: {
+                                    department: courseRecord.department,
+                                    semester: courseRecord.semester
                                 }
                             });
-                            
+
                             for (const s of students) {
                                 await prisma.enrollment.upsert({
                                     where: {
@@ -417,7 +417,7 @@ export const createUser: RequestHandler = async (req, res, next) => {
                 }
             }
         }
-        
+
         res.json({ success: true, message: 'User created' });
     } catch (error) {
         console.error('Create User Error:', error);
@@ -427,6 +427,12 @@ export const createUser: RequestHandler = async (req, res, next) => {
 export const deleteUser: RequestHandler = async (req, res, next) => {
     const { id } = req.params;
     try {
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (user?.role === 'admin') {
+            res.status(403).json({ error: 'Cannot delete admin accounts' });
+            return;
+        }
+
         await prisma.$transaction([
             // 1. Delete announcements authored by this user
             prisma.announcement.deleteMany({
@@ -517,7 +523,7 @@ export const updateUser: RequestHandler = async (req, res, next) => {
                         phone: phone !== undefined ? phone : user.student.phone,
                     }
                 });
-                
+
                 if (identifier && identifier !== user.student.usn) {
                     await tx.student.update({
                         where: { user_id: id },
@@ -553,7 +559,7 @@ export const getConfig: RequestHandler = async (req, res, next) => {
         const config = await prisma.systemConfig.findMany();
         const configMap: Record<string, string> = {};
         config.forEach(c => configMap[c.key] = c.value);
-        
+
         res.json({
             minAtt: configMap['minAtt'] || '75',
             iaMax: configMap['iaMax'] || '25',
@@ -589,7 +595,7 @@ export const updateConfig: RequestHandler = async (req, res, next) => {
                 create: { key, value: String(cfg[key]) }
             });
         });
-        
+
         await Promise.all(promises);
         res.json({ success: true, message: 'Config updated' });
     } catch (error) {
@@ -608,7 +614,7 @@ export const generateReport: RequestHandler = async (req, res, next) => {
     try {
         let records: any[] = [];
         let header: any[] = [];
-        
+
         if (type === 'attendance_monthly') {
             const report = await getAttendanceMonthlyReport();
             header = report.header;
@@ -650,7 +656,7 @@ export const generateReport: RequestHandler = async (req, res, next) => {
                 for (const code in courseAss) {
                     const data = courseAss[code];
                     const getMark = (typeKeyword: string) => {
-                        const found = data.assessments.find(a => 
+                        const found = data.assessments.find(a =>
                             a.assessment_type.toLowerCase().replace(/[-_\s]/g, '').includes(typeKeyword)
                         );
                         return found ? found.score.toString() : 'N/A';
@@ -911,7 +917,7 @@ export const getCourses: RequestHandler = async (req, res, next) => {
         const skip = (page - 1) * limit;
 
         const whereClause: any = {};
-        
+
         if (department !== 'All') {
             whereClause.department = department;
         }
@@ -940,7 +946,7 @@ export const getCourses: RequestHandler = async (req, res, next) => {
             skip,
             take: limit
         });
-        
+
         res.json({
             courses,
             pagination: {
@@ -975,12 +981,12 @@ export const assignCourseFaculty: RequestHandler = async (req, res, next) => {
         }
 
         const students = await prisma.student.findMany({
-            where: { 
-                department: courseRecord.department, 
-                semester: courseRecord.semester 
+            where: {
+                department: courseRecord.department,
+                semester: courseRecord.semester
             }
         });
-        
+
         for (const s of students) {
             await prisma.enrollment.upsert({
                 where: {
@@ -1014,7 +1020,7 @@ export const createUsersBulk: RequestHandler = async (req, res, next) => {
         res.status(400).json({ error: 'Payload must contain a "users" array.' });
         return;
     }
-    
+
     try {
         const passwordHash = await bcrypt.hash('password123', 10);
         let imported = 0;
@@ -1053,7 +1059,7 @@ export const createUsersBulk: RequestHandler = async (req, res, next) => {
             });
 
             if (normalizedRole === 'student') {
-                const finalUsn = (usn || `21${dept.replace(/[^A-Za-z0-9]/g, '').substring(0, 3).toUpperCase()}${Math.floor(100 + Math.random()*900)}`).trim();
+                const finalUsn = (usn || `21${dept.replace(/[^A-Za-z0-9]/g, '').substring(0, 3).toUpperCase()}${Math.floor(100 + Math.random() * 900)}`).trim();
                 await prisma.student.create({
                     data: {
                         usn: finalUsn,
@@ -1082,7 +1088,7 @@ export const createUsersBulk: RequestHandler = async (req, res, next) => {
                 await enrollStudentInSemesterCourses(finalUsn, dept, semester ? parseInt(String(semester), 10) : 1);
 
             } else if (normalizedRole === 'teacher') {
-                const finalEmpId = (emp_id || `FAC-${Math.floor(100 + Math.random()*900)}`).trim();
+                const finalEmpId = (emp_id || `FAC-${Math.floor(100 + Math.random() * 900)}`).trim();
                 await prisma.faculty.create({
                     data: {
                         emp_id: finalEmpId,
@@ -1099,21 +1105,21 @@ export const createUsersBulk: RequestHandler = async (req, res, next) => {
                         .split(',')
                         .map((s: string) => s.trim())
                         .filter(Boolean);
-                    
+
                     if (courseCodes.length > 0) {
                         for (const cc of courseCodes) {
                             const courseRecord = await prisma.course.findUnique({
                                 where: { course_code: cc }
                             });
-                            
+
                             if (courseRecord) {
                                 const students = await prisma.student.findMany({
-                                    where: { 
-                                        department: courseRecord.department, 
-                                        semester: courseRecord.semester 
+                                    where: {
+                                        department: courseRecord.department,
+                                        semester: courseRecord.semester
                                     }
                                 });
-                                
+
                                 for (const s of students) {
                                     await prisma.enrollment.upsert({
                                         where: {
@@ -1208,7 +1214,7 @@ export const toggleFeeStatus: RequestHandler = async (req, res, next) => {
 
         const updatedFee = await prisma.fee.update({
             where: { id },
-            data: { 
+            data: {
                 status: newStatus,
                 amount_paid: newStatus === 'Clear' ? fee.amount_due : 0
             }
@@ -1246,7 +1252,7 @@ export const getRiskRoster: RequestHandler = async (req, res, next) => {
 
         const roster = students.map(s => {
             const latestPred = s.predictions[0] || null;
-            
+
             // Health Score Calculation
             let riskMultiplier = 1;
             const riskLevel = latestPred ? latestPred.risk_level : 'Low';
@@ -1263,12 +1269,12 @@ export const getRiskRoster: RequestHandler = async (req, res, next) => {
             const ia2Find = s.assessments.find(a => a.assessment_type === 'IA-2');
             const ia3Find = s.assessments.find(a => a.assessment_type === 'IA-3');
             const practicalFind = s.assessments.find(a => a.assessment_type === 'Practical');
-            
-            if (ia1Find) { totalMarks += ia1Find.score.toNumber(); maxMarks += 30; }
-            if (ia2Find) { totalMarks += ia2Find.score.toNumber(); maxMarks += 30; }
-            if (ia3Find) { totalMarks += ia3Find.score.toNumber(); maxMarks += 30; }
-            if (practicalFind) { totalMarks += practicalFind.score.toNumber(); maxMarks += 20; }
-            
+
+            if (ia1Find) { totalMarks += ia1Find.score.toNumber(); maxMarks += 50; }
+            if (ia2Find) { totalMarks += ia2Find.score.toNumber(); maxMarks += 50; }
+            if (ia3Find) { totalMarks += ia3Find.score.toNumber(); maxMarks += 50; }
+            if (practicalFind) { totalMarks += practicalFind.score.toNumber(); maxMarks += 50; }
+
             const marksPercent = maxMarks > 0 ? (totalMarks / maxMarks) * 100 : 100;
             const rawHealth = (attendancePercent * 0.5) + (marksPercent * 0.5);
             const health_score = Math.round(rawHealth * riskMultiplier);
@@ -1327,19 +1333,19 @@ function parseDbUrl(url: string) {
     }
     const creds = cleanUrl.substring(0, lastAtIndex);
     const hostPortDb = cleanUrl.substring(lastAtIndex + 1);
-    
+
     const colonIndex = creds.indexOf(':');
     const user = colonIndex !== -1 ? creds.substring(0, colonIndex) : creds;
     const password = colonIndex !== -1 ? creds.substring(colonIndex + 1) : '';
-    
+
     const slashIndex = hostPortDb.indexOf('/');
     const hostPort = slashIndex !== -1 ? hostPortDb.substring(0, slashIndex) : hostPortDb;
     const database = slashIndex !== -1 ? hostPortDb.substring(slashIndex + 1) : '';
-    
+
     const portColonIndex = hostPort.indexOf(':');
     const host = portColonIndex !== -1 ? hostPort.substring(0, portColonIndex) : hostPort;
     const port = portColonIndex !== -1 ? hostPort.substring(portColonIndex + 1) : '5432';
-    
+
     return { user, password, host, port, database };
 }
 
@@ -1364,7 +1370,7 @@ export const listBackups: RequestHandler = async (req, res, next) => {
                 const minutes = String(date.getMinutes()).padStart(2, '0');
                 const ampm = hours24 >= 12 ? 'PM' : 'AM';
                 const dateStr = `${year}-${month}-${day} ${String(hours12).padStart(2, '0')}:${minutes} ${ampm}`;
-                
+
                 return {
                     name: file,
                     size: `${sizeInMB} MB`,
@@ -1373,7 +1379,7 @@ export const listBackups: RequestHandler = async (req, res, next) => {
                     status: 'Completed'
                 };
             });
-            
+
         backups.sort((a, b) => b.name.localeCompare(a.name));
         res.json(backups);
     } catch (error) {
@@ -1388,9 +1394,9 @@ export const triggerBackup: RequestHandler = async (req, res, next) => {
         if (!dbUrl) {
             return res.status(500).json({ error: 'DATABASE_URL environment variable is not defined' });
         }
-        
+
         const { user, password, host, port, database } = parseDbUrl(dbUrl);
-        
+
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -1398,19 +1404,19 @@ export const triggerBackup: RequestHandler = async (req, res, next) => {
         const hour = String(now.getHours()).padStart(2, '0');
         const minute = String(now.getMinutes()).padStart(2, '0');
         const second = String(now.getSeconds()).padStart(2, '0');
-        
+
         const filename = `backup_manual_${year}-${month}-${day}_${hour}${minute}${second}.sql`;
         const filePath = path.join(BACKUP_DIR, filename);
-        
+
         const command = `pg_dump -h ${host} -U ${user} -p ${port} -d ${database} -f "${filePath}"`;
         const env = { ...process.env, PGPASSWORD: password };
-        
+
         exec(command, { env }, async (error, stdout, stderr) => {
             if (error) {
                 console.error('pg_dump error:', error);
                 return res.status(500).json({ error: 'pg_dump failed to execute', details: stderr });
             }
-            
+
             try {
                 const adminUser = (req as any).user;
                 await prisma.auditLog.create({
@@ -1425,10 +1431,10 @@ export const triggerBackup: RequestHandler = async (req, res, next) => {
             } catch (auditErr) {
                 console.error('Failed to write backup audit log:', auditErr);
             }
-            
+
             const stats = fs.statSync(filePath);
             const sizeInMB = (stats.size / (1024 * 1024)).toFixed(1);
-            
+
             res.json({
                 success: true,
                 message: 'Backup completed successfully',
