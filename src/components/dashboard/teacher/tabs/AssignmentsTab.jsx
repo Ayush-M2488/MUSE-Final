@@ -5,6 +5,7 @@ import { DK as t } from '../../shared/theme';
 import { assignmentService } from '../../../../services/api';
 
 export default function AssignmentsTab({ dashboardData }) {
+  const courses = dashboardData?.courses || [];
   const [assignments, setAssignments] = useState([]);
   const [assignTab, setAssignTab] = useState('student');
   const [assignModal, setAssignModal] = useState(false);
