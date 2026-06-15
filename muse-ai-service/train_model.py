@@ -22,33 +22,33 @@ ia3 = np.random.normal(25, 4, n_samples).clip(0, 30)
 # Practical Marks (out of 20 typically)
 practical = np.random.normal(16, 3, n_samples).clip(0, 20)
 
-# Introduce correlation: lower CGPA/attendance tends to have lower IA marks
+# Introduce correlation: lower attendance tends to have lower IA marks
 for i in range(n_samples):
-    if attendance[i] < 60 or cgpa[i] < 5.0:
+    if attendance[i] < 60:
         ia1[i] *= np.random.uniform(0.5, 0.8)
         ia2[i] *= np.random.uniform(0.5, 0.8)
         ia3[i] *= np.random.uniform(0.5, 0.8)
         practical[i] *= np.random.uniform(0.6, 0.9)
 
 # Labeling function mimicking strict academic risk assessment
-def assign_risk(att, i1, i2, i3, prac, c):
+def assign_risk(att, i1, i2, i3, prac):
     total_ia = i1 + i2 + i3
     
     # High Risk: Critical attendance OR critically failing multiple components
-    # (Total IA < 35) OR any single IA completely failed (< 8) OR terrible CGPA
-    if att < 65 or total_ia < 35 or i1 < 8 or i2 < 8 or i3 < 8 or prac < 8 or c < 4.0:
+    # (Total IA < 35) OR any single IA completely failed (< 8)
+    if att < 65 or total_ia < 35 or i1 < 8 or i2 < 8 or i3 < 8 or prac < 8:
         return 2 
         
     # Medium Risk: Warning attendance OR struggling academically
     # (Total IA < 50) OR any single IA struggling (< 14)
-    elif att < 75 or total_ia < 50 or i1 < 14 or i2 < 14 or i3 < 14 or prac < 12 or c < 6.0:
+    elif att < 75 or total_ia < 50 or i1 < 14 or i2 < 14 or i3 < 14 or prac < 12:
         return 1
         
     # Low Risk: Doing fine across all metrics
     else:
         return 0
 
-labels = [assign_risk(attendance[i], ia1[i], ia2[i], ia3[i], practical[i], cgpa[i]) for i in range(n_samples)]
+labels = [assign_risk(attendance[i], ia1[i], ia2[i], ia3[i], practical[i]) for i in range(n_samples)]
 
 df = pd.DataFrame({
     'attendance': attendance,
@@ -56,7 +56,6 @@ df = pd.DataFrame({
     'ia2': ia2,
     'ia3': ia3,
     'practical': practical,
-    'cgpa': cgpa,
     'risk_label': labels
 })
 
@@ -65,7 +64,7 @@ noise_indices = np.random.choice(n_samples, size=int(n_samples * 0.05), replace=
 for idx in noise_indices:
     df.loc[idx, 'risk_label'] = np.random.choice([0, 1, 2])
 
-X = df[['attendance', 'ia1', 'ia2', 'ia3', 'practical', 'cgpa']]
+X = df[['attendance', 'ia1', 'ia2', 'ia3', 'practical']]
 y = df['risk_label']
 
 print("2. Splitting dataset into training and testing sets...")

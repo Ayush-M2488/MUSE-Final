@@ -66,6 +66,17 @@ export const calculateSGPA = (
     let totalCredits = 0;
 
     for (const course of courseData) {
+        // Strict SGPA Policy: Only calculate if ALL components are fully entered for the subject.
+        if (
+            course.marks.ia1 === null ||
+            course.marks.ia2 === null ||
+            course.marks.ia3 === null ||
+            course.marks.practical === null ||
+            course.marks.final === null
+        ) {
+            return 0.0;
+        }
+
         const { percentage } = calculateConsolidatedMarks(
             course.marks.ia1,
             course.marks.ia2,

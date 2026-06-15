@@ -53,14 +53,11 @@ def predict():
         # Practical fallback to neutral 14.0 (out of 20) if missing
         practical = float(prac_val) if (prac_val is not None and prac_val != '') else 14.0
         
-        cgpa_val = s.get('cgpa')
-        cgpa = float(cgpa_val) if (cgpa_val is not None and cgpa_val != '') else 7.0
-        
         explanations = []
 
         if loaded_model is not None and explainer is not None:
             # --- USE LOCAL TRAINED ML MODEL ---
-            features = np.array([[att, ia1, ia2, ia3, practical, cgpa]])
+            features = np.array([[att, ia1, ia2, ia3, practical]])
             
             probs = loaded_model.predict_proba(features)[0]
             pred_class = loaded_model.predict(features)[0]
@@ -85,10 +82,9 @@ def predict():
                 'IA-1' if (ia1_val is not None and ia1_val != '') else 'IA-1 (Predicted)', 
                 'IA-2' if (ia2_val is not None and ia2_val != '') else 'IA-2 (Predicted)', 
                 'IA-3' if (ia3_val is not None and ia3_val != '') else 'IA-3 (Predicted)', 
-                'Practical' if (prac_val is not None and prac_val != '') else 'Practical (Predicted)', 
-                'SGPA' if (cgpa_val is not None and cgpa_val != '') else 'SGPA (Predicted)'
+                'Practical' if (prac_val is not None and prac_val != '') else 'Practical (Predicted)'
             ]
-            feature_vals = [att, ia1, ia2, ia3, practical, cgpa]
+            feature_vals = [att, ia1, ia2, ia3, practical]
             
             # Map features to their SHAP impacts
             for idx, (f_name, f_val, s_val) in enumerate(zip(feature_names, feature_vals, class_shap_values)):
@@ -121,8 +117,6 @@ def predict():
                             impact_text = f"Strong {f_name} score ({f_val:.1f}) ensured low risk."
                         elif 'Practical' in f_name and f_val >= 12:
                             impact_text = f"Good {f_name} score ({f_val:.1f}) ensured low risk."
-                        elif 'SGPA' in f_name and f_val >= 6.0:
-                            impact_text = f"Good {f_name} ({f_val:.1f}) ensured low risk."
                         elif s_val > 0:
                             impact_text = f"Metric {f_name} ({f_val}) secured low risk."
                         else:
@@ -135,8 +129,7 @@ def predict():
                     corrected_shap = float(s_val)
                     if ('Attendance' in f_name and f_val >= 75) or \
                        ('IA' in f_name and f_val >= 20) or \
-                       ('Practical' in f_name and f_val >= 12) or \
-                       ('SGPA' in f_name and f_val >= 6.0):
+                       ('Practical' in f_name and f_val >= 12):
                         corrected_shap = -abs(corrected_shap) # Force negative (Green / Left)
                     else:
                         corrected_shap = abs(corrected_shap) # Force positive (Red / Right)
@@ -156,10 +149,27 @@ def predict():
             score = 0.1
             if att < 75:
                 score += 0.5
-                explanations.append({"feature": "Attendance", "value": att, "shap": 0.5, "impact": "Critical: Attendance below 75%."})
-            if (ia1 + ia2) < 25:
-                score += 0.3
-                explanations.append({"feature": "Marks", "value": (ia1+ia2), "shap": 0.3, "impact": "Critical: Low internal marks."})
+                explanations.append({"feature": "Attendance", "value": att, "shap": 0.5, "impact": f"Critical: Attendance below 75% ({att}%)."})
+            
+            # Check individual IA failures
+            if ia1 < 14:
+                score += 0.15
+                explanations.append({"feature": "IA-1", "value": ia1, "shap": 0.15, "impact": f"Struggling in IA-1 ({ia1}/30)."})
+            if ia2 < 14:
+                score += 0.15
+                explanations.append({"feature": "IA-2", "value": ia2, "shap": 0.15, "impact": f"Struggling in IA-2 ({ia2}/30)."})
+            if ia3 < 14:
+                score += 0.15
+                explanations.append({"feature": "IA-3", "value": ia3, "shap": 0.15, "impact": f"Struggling in IA-3 ({ia3}/30)."})
+                
+            total_ia = ia1 + ia2 + ia3
+            if total_ia < 50:
+                score += 0.2
+                explanations.append({"feature": "Total IAs", "value": total_ia, "shap": 0.2, "impact": f"Low overall internal marks ({total_ia}/90)."})
+                
+            if practical < 12:
+                score += 0.2
+                explanations.append({"feature": "Practical", "value": practical, "shap": 0.2, "impact": f"Low practical marks ({practical}/20)."})
             
             if score >= 0.7: risk = "High"
             elif score >= 0.4: risk = "Medium"
