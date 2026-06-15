@@ -56,11 +56,13 @@ export default function AssignmentsTab({ dashboardData }) {
         } else {
           files = [{ name: fileName || 'Details', data: fileData }];
         }
-        
-        return files.map((file, idx) => (
+        const BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:3000';
+        return files.map((file, idx) => {
+          const href = (file.data && file.data.startsWith('/uploads')) ? `${BASE_URL}${file.data}` : file.data;
+          return (
           <a 
             key={idx}
-            href={file.data} 
+            href={href} 
             download={file.name}
             onClick={(e) => e.stopPropagation()}
             style={{
@@ -81,7 +83,8 @@ export default function AssignmentsTab({ dashboardData }) {
           >
             📎 Details ({file.name})
           </a>
-        ));
+          );
+        });
       };
 
       const handleCreateAssign = async () => {

@@ -3,6 +3,8 @@ import { DK as t } from '../../shared/theme';
 import { CH, Loader } from '../../shared/Primitives';
 import { FileText, Download, X, Paperclip, Send } from 'lucide-react';
 
+const BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:3000';
+
 export default function MentorTab({
     loadingMentor,
     mentorData,
@@ -76,12 +78,12 @@ export default function MentorTab({
                                                     <FileText size={16} color={t.text} />
                                                 </div>
                                                 <div style={{ flex: 1, overflow: 'hidden' }}>
-                                                    <a href={`http://localhost:3000${msg.file_url}`} download={msg.file_name} target="_blank" rel="noopener noreferrer" style={{ color: '#E2E8F0', textDecoration: 'none', fontSize: '.85rem', fontWeight: 500, display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                                    <a href={`${BASE_URL}${msg.file_url}`} download={msg.file_name} target="_blank" rel="noopener noreferrer" style={{ color: '#E2E8F0', textDecoration: 'none', fontSize: '.85rem', fontWeight: 500, display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                                                         {msg.file_name}
                                                     </a>
                                                     <div style={{ fontSize: '.65rem', color: t.muted, marginTop: '2px' }}>Attachment</div>
                                                 </div>
-                                                <a href={`http://localhost:3000${msg.file_url}`} download={msg.file_name} target="_blank" rel="noopener noreferrer" style={{ color: t.muted, padding: '0.25rem', display: 'flex', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = t.text} onMouseLeave={e => e.currentTarget.style.color = t.muted}>
+                                                <a href={`${BASE_URL}${msg.file_url}`} download={msg.file_name} target="_blank" rel="noopener noreferrer" style={{ color: t.muted, padding: '0.25rem', display: 'flex', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = t.text} onMouseLeave={e => e.currentTarget.style.color = t.muted}>
                                                     <Download size={16} />
                                                 </a>
                                             </div>
