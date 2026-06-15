@@ -33,13 +33,18 @@ for i in range(n_samples):
 # Labeling function mimicking strict academic risk assessment
 def assign_risk(att, i1, i2, i3, prac, c):
     total_ia = i1 + i2 + i3
-    # High Risk: Critical attendance OR failing multiple components OR terrible CGPA
-    if att < 65 or total_ia < 35 or prac < 8 or c < 4.0:
+    
+    # High Risk: Critical attendance OR critically failing multiple components
+    # (Total IA < 35) OR any single IA completely failed (< 8) OR terrible CGPA
+    if att < 65 or total_ia < 35 or i1 < 8 or i2 < 8 or i3 < 8 or prac < 8 or c < 4.0:
         return 2 
+        
     # Medium Risk: Warning attendance OR struggling academically
-    elif att < 75 or total_ia < 50 or prac < 12 or c < 6.0:
+    # (Total IA < 50) OR any single IA struggling (< 14)
+    elif att < 75 or total_ia < 50 or i1 < 14 or i2 < 14 or i3 < 14 or prac < 12 or c < 6.0:
         return 1
-    # Low Risk: Doing fine
+        
+    # Low Risk: Doing fine across all metrics
     else:
         return 0
 
