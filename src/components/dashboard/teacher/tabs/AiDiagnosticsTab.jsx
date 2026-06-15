@@ -239,7 +239,7 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                                         />
                                         <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
                                         <ReferenceLine x={0} stroke={t.muted} strokeWidth={2} />
-                                        <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
+                                        <Bar dataKey="value" barSize={32} isAnimationActive={false}>
                                             {chartData.map((entry, index) => (
                                                 <Cell 
                                                     key={`cell-${index}`} 
