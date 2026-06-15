@@ -49,7 +49,7 @@ export default function HodHubTab() {
     if (!hodData || hodStudents.length === 0) return;
     const header = "USN,Name,Semester,SGPA,AI Classification\n";
     const mapRisk = (r) => r === 'High' ? 'Critical Intervention' : r === 'Medium' ? 'Needs Attention' : r === 'Low' ? 'On Track' : r;
-    const rows = hodStudents.map(s => `"${s.usn}","${s.name}",${s.semester},${s.cgpa},"${mapRisk(s.risk)}"`).join("\n");
+    const rows = hodStudents.map(s => `"${s.usn}","${s.name}",${s.semester},${s.cgpa > 0 ? s.cgpa : '-'},"${mapRisk(s.risk)}"`).join("\n");
     const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(header + rows);
     const link = document.createElement("a");
     link.setAttribute("href", csvContent);

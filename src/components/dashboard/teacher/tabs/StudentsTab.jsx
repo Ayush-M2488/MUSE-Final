@@ -76,8 +76,8 @@ export default function StudentsTab({
                     </span>
                   </td>
                   <td>
-                    <span style={{ fontWeight: 500, color: s.cgpa >= 8 ? t.rLow : s.cgpa < 6 ? t.rHigh : t.text }}>
-                      {s.cgpa ? s.cgpa.toFixed(2) : '-'}
+                    <span style={{ fontWeight: 500, color: s.cgpa > 0 ? (s.cgpa >= 8 ? t.rLow : s.cgpa < 6 ? t.rHigh : t.text) : t.muted }}>
+                      {s.cgpa > 0 ? s.cgpa.toFixed(2) : '-'}
                     </span>
                   </td>
                   <td>

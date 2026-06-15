@@ -81,9 +81,9 @@ export default function RiskTab({
                           fontSize: '0.65rem',
                           padding: '0.1rem 0.3rem',
                           borderRadius: '3px',
-                          background: f.shap > 0 ? (s.risk === 'High' || s.risk === 'Medium' ? `${t.rHigh}33` : `${t.rLow}33`) : (s.risk === 'High' || s.risk === 'Medium' ? `${t.rLow}33` : `${t.rHigh}33`),
-                          color: f.shap > 0 ? (s.risk === 'High' || s.risk === 'Medium' ? t.rHigh : t.rLow) : (s.risk === 'High' || s.risk === 'Medium' ? t.rLow : t.rHigh),
-                          border: `1px solid ${f.shap > 0 ? (s.risk === 'High' || s.risk === 'Medium' ? t.rHigh : t.rLow) : (s.risk === 'High' || s.risk === 'Medium' ? t.rLow : t.rHigh)}`
+                          background: f.shap > 0 ? `${t.rHigh}33` : `${t.rLow}33`,
+                          color: f.shap > 0 ? t.rHigh : t.rLow,
+                          border: `1px solid ${f.shap > 0 ? t.rHigh : t.rLow}`
                         }}>
                           {f.feature} ({f.shap > 0 ? '+' : ''}{f.shap.toFixed(2)})
                         </div>
