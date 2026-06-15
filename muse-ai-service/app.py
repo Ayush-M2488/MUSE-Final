@@ -80,7 +80,14 @@ def predict():
                 else:
                     class_shap_values = shap_values[0]
 
-            feature_names = ['Attendance', 'IA-1', 'IA-2', 'IA-3', 'Practical', 'SGPA']
+            feature_names = [
+                'Attendance', 
+                'IA-1' if (ia1_val is not None and ia1_val != '') else 'IA-1 (Predicted)', 
+                'IA-2' if (ia2_val is not None and ia2_val != '') else 'IA-2 (Predicted)', 
+                'IA-3' if (ia3_val is not None and ia3_val != '') else 'IA-3 (Predicted)', 
+                'Practical' if (prac_val is not None and prac_val != '') else 'Practical (Predicted)', 
+                'SGPA' if (cgpa_val is not None and cgpa_val != '') else 'SGPA (Predicted)'
+            ]
             feature_vals = [att, ia1, ia2, ia3, practical, cgpa]
             
             # Map features to their SHAP impacts
@@ -90,14 +97,14 @@ def predict():
                     
                     if pred_class > 0: # Medium/High risk
                         # explicitly check if the metric is actually good!
-                        if f_name == 'Attendance' and f_val >= 75:
+                        if 'Attendance' in f_name and f_val >= 75:
                             impact_text = f"Good attendance ({f_val}%) helped mitigate overall risk."
                         elif 'IA' in f_name and f_val >= 20:
-                            impact_text = f"Strong {f_name} score ({f_val}) helped prevent higher risk."
-                        elif f_name == 'Practical' and f_val >= 12:
-                            impact_text = f"Good practical marks ({f_val}) helped mitigate overall risk."
-                        elif f_name == 'CGPA' and f_val >= 6.0:
-                            impact_text = f"Good CGPA ({f_val}) helped mitigate overall risk."
+                            impact_text = f"Strong {f_name} score ({f_val:.1f}) helped prevent higher risk."
+                        elif 'Practical' in f_name and f_val >= 12:
+                            impact_text = f"Good {f_name} score ({f_val:.1f}) helped mitigate overall risk."
+                        elif 'SGPA' in f_name and f_val >= 6.0:
+                            impact_text = f"Good {f_name} ({f_val:.1f}) helped mitigate overall risk."
                         else:
                             if f_name == 'Attendance' and f_val < 75:
                                 impact_text = f"Low attendance ({f_val}%) strongly increased risk."
@@ -108,14 +115,14 @@ def predict():
                             else:
                                 impact_text = f"Metric {f_name} ({f_val}) slightly mitigated risk."
                     else: # Low risk
-                        if f_name == 'Attendance' and f_val >= 75:
+                        if 'Attendance' in f_name and f_val >= 75:
                             impact_text = f"High attendance ({f_val}%) secured low risk standing."
                         elif 'IA' in f_name and f_val >= 20:
-                            impact_text = f"Strong {f_name} score ({f_val}) ensured low risk."
-                        elif f_name == 'Practical' and f_val >= 12:
-                            impact_text = f"Good practical score ({f_val}) ensured low risk."
-                        elif f_name == 'CGPA' and f_val >= 6.0:
-                            impact_text = f"Good CGPA ({f_val}) ensured low risk."
+                            impact_text = f"Strong {f_name} score ({f_val:.1f}) ensured low risk."
+                        elif 'Practical' in f_name and f_val >= 12:
+                            impact_text = f"Good {f_name} score ({f_val:.1f}) ensured low risk."
+                        elif 'SGPA' in f_name and f_val >= 6.0:
+                            impact_text = f"Good {f_name} ({f_val:.1f}) ensured low risk."
                         elif s_val > 0:
                             impact_text = f"Metric {f_name} ({f_val}) secured low risk."
                         else:
@@ -129,18 +136,18 @@ def predict():
                     # for good scores so the UI renders them as Green/Mitigating.
                     corrected_shap = float(s_val)
                     if pred_class > 0:
-                        if (f_name == 'Attendance' and f_val >= 75) or \
+                        if ('Attendance' in f_name and f_val >= 75) or \
                            ('IA' in f_name and f_val >= 20) or \
-                           (f_name == 'Practical' and f_val >= 12) or \
-                           (f_name == 'CGPA' and f_val >= 6.0):
+                           ('Practical' in f_name and f_val >= 12) or \
+                           ('SGPA' in f_name and f_val >= 6.0):
                             corrected_shap = -abs(corrected_shap) # Force negative (Green)
                         else:
                             corrected_shap = abs(corrected_shap) # Force positive (Red)
                     else: # Low Risk
-                        if (f_name == 'Attendance' and f_val >= 75) or \
+                        if ('Attendance' in f_name and f_val >= 75) or \
                            ('IA' in f_name and f_val >= 20) or \
-                           (f_name == 'Practical' and f_val >= 12) or \
-                           (f_name == 'CGPA' and f_val >= 6.0):
+                           ('Practical' in f_name and f_val >= 12) or \
+                           ('SGPA' in f_name and f_val >= 6.0):
                             corrected_shap = abs(corrected_shap) # Force positive (Green in Low Risk)
                         else:
                             corrected_shap = -abs(corrected_shap) # Force negative (Red in Low Risk)
