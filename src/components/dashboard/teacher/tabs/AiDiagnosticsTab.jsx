@@ -253,14 +253,6 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                                                     fill={entry.value > 0 ? t.rHigh : t.teal}
                                                 />
                                             ))}
-                                            <LabelList 
-                                                dataKey="value" 
-                                                position="outside" 
-                                                formatter={(val) => val > 0 ? `+${val.toFixed(4)}` : val.toFixed(4)} 
-                                                fill={t.text} 
-                                                fontSize={11} 
-                                                fontWeight={500}
-                                            />
                                         </Bar>
                                     </BarChart>
                                 </ResponsiveContainer>
