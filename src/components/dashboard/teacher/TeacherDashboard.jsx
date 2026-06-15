@@ -423,14 +423,28 @@ export default function TeacherDashboard({ page, setPage }) {
     }
   };
 
-  const handleRunAI = async () => {
+  const handleRunAI = async (code = null) => {
     setRunningAI(true);
-    const courseCode = dashboardData.courses[ci].code;
+    const courseCode = code || (dashboardData.courses[ci] ? dashboardData.courses[ci].code : null);
+    
     try {
-      await mlService.generatePredictions(courseCode);
-      const preds = await mlService.getCoursePredictions(courseCode);
-      setPredictions(preds);
-      alert('AI Analysis complete!');
+      if (courseCode === 'all') {
+        // Run sequentially for all courses to avoid overwhelming the server
+        for (const course of dashboardData.courses) {
+          await mlService.generatePredictions(course.code);
+        }
+        // Fetch predictions for the currently selected tab to update the view
+        if (dashboardData.courses[ci]) {
+          const preds = await mlService.getCoursePredictions(dashboardData.courses[ci].code);
+          setPredictions(preds);
+        }
+        alert('AI Analysis complete for ALL subjects!');
+      } else if (courseCode) {
+        await mlService.generatePredictions(courseCode);
+        const preds = await mlService.getCoursePredictions(courseCode);
+        setPredictions(preds);
+        alert(`AI Analysis complete for ${courseCode}!`);
+      }
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.error || 'Failed to run AI analysis.');

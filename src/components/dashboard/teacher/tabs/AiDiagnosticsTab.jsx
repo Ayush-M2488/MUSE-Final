@@ -125,9 +125,14 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                     dk
                 />
                 {predictions && predictions.length > 0 && (
-                    <button className="btn btn-wh" onClick={() => handleRunAI(C?.code || 'all')} disabled={runningAI}>
-                        {runningAI ? 'Analyzing...' : 'Run New Analysis'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn btn-gh" onClick={() => handleRunAI()} disabled={runningAI}>
+                            {runningAI ? 'Analyzing...' : 'Analyze Current'}
+                        </button>
+                        <button className="btn btn-wh" onClick={() => handleRunAI('all')} disabled={runningAI}>
+                            {runningAI ? 'Analyzing All...' : 'Analyze ALL Subjects'}
+                        </button>
+                    </div>
                 )}
             </div>
 
