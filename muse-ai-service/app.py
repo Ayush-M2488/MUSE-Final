@@ -23,6 +23,10 @@ except Exception as e:
     MODEL_VERSION = 'v1.0-rulebased-fallback'
     print(f"[!] Warning: Could not load .pkl model. Error: {e}. Falling back to rule-based engine.")
 
+@app.route('/', methods=['GET'])
+def health():
+    return jsonify({"status": "healthy", "model_version": MODEL_VERSION}), 200
+
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
