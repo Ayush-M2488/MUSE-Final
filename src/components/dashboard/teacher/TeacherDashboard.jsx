@@ -119,16 +119,16 @@ export default function TeacherDashboard({ page, setPage }) {
     try {
       const data = await teacherService.getDashboardData();
       setDashboardData(data);
-      
+
       if (data && data.profile) {
         setProfileName(data.profile.name || '');
         setProfileEmail(data.profile.email || '');
         setCustomThresholds(data.profile.custom_thresholds || {});
-        
+
         const prefs = data.profile.notification_prefs || {};
         setEmailOnHighRisk(prefs.emailOnHighRisk !== undefined ? prefs.emailOnHighRisk : true);
         setAutoNotifyAbsentee(prefs.autoNotifyAbsentee !== undefined ? prefs.autoNotifyAbsentee : false);
-        
+
         setConsultationSlots(data.profile.consultation_hours || []);
       }
       setLoading(false);
@@ -223,13 +223,13 @@ export default function TeacherDashboard({ page, setPage }) {
 
     try {
       // Check if any of the target courses already have a holiday declared on this date
-      const alreadyHoliday = targetCourses.some(code => 
+      const alreadyHoliday = targetCourses.some(code =>
         dashboardData?.holidays?.some(h => h.date === attDate && h.course_code === code)
       );
 
       const scopeLabel = isAll ? "All Classes" : `${targetCourses.length} selected classes (${targetCourses.join(', ')})`;
-      const msg = alreadyHoliday 
-        ? `Are you sure you want to remove the Holiday status on this day for the selected ${scopeLabel}?` 
+      const msg = alreadyHoliday
+        ? `Are you sure you want to remove the Holiday status on this day for the selected ${scopeLabel}?`
         : `Are you sure you want to declare this day as a Holiday for the selected ${scopeLabel}? Any matching attendance records on this day will be permanently cleared.`;
       if (!window.confirm(msg)) return;
 
@@ -268,18 +268,18 @@ export default function TeacherDashboard({ page, setPage }) {
       alert("Please select a specific course to mark batch attendance.");
       return;
     }
-    
+
     const courseCode = dashboardData.courses[ci].code;
-    
+
     // Determine which students to mark
     let studentsToMark = courseStudents.filter(s => s.course_code === courseCode);
     if (status === 'absent') {
       // When marking all as absent, only affect those who haven't been explicitly marked present
       studentsToMark = studentsToMark.filter(s => s.todayAtt !== 'present');
     }
-    
+
     const records = studentsToMark.map(s => ({ usn: s.usn, status }));
-    
+
     // Optimistic UI update
     setCourseStudents(prev => prev.map(s => {
       if (s.course_code === courseCode) {
@@ -310,7 +310,7 @@ export default function TeacherDashboard({ page, setPage }) {
     let max = 30; // default for ia1, ia2, ia3
     if (field === 'practical') max = 20;
     if (field === 'finalExam') max = 100;
-    
+
     if (isNaN(num) || num < 0 || num > max) return;
     setCourseStudents(prev => prev.map(s => s.usn === usn ? { ...s, [field]: value } : s));
   };
@@ -342,7 +342,7 @@ export default function TeacherDashboard({ page, setPage }) {
         const selectedSection = parts[1];
         await teacherService.enrollStudent(courseCode, { ...enrollData, section: selectedSection });
       }));
-      
+
       alert("Student enrolled successfully!");
       setEnrollModalOpen(false);
       setEnrollData({ name: '', usn: '', email: '', program: '', semester: '', courseIds: [] });
@@ -423,28 +423,14 @@ export default function TeacherDashboard({ page, setPage }) {
     }
   };
 
-  const handleRunAI = async (code = null) => {
+  const handleRunAI = async () => {
     setRunningAI(true);
-    const courseCode = code || (dashboardData.courses[ci] ? dashboardData.courses[ci].code : null);
-    
+    const courseCode = dashboardData.courses[ci].code;
     try {
-      if (courseCode === 'all') {
-        // Run sequentially for all courses to avoid overwhelming the server
-        for (const course of dashboardData.courses) {
-          await mlService.generatePredictions(course.code);
-        }
-        // Fetch predictions for the currently selected tab to update the view
-        if (dashboardData.courses[ci]) {
-          const preds = await mlService.getCoursePredictions(dashboardData.courses[ci].code);
-          setPredictions(preds);
-        }
-        alert('AI Analysis complete for ALL subjects!');
-      } else if (courseCode) {
-        await mlService.generatePredictions(courseCode);
-        const preds = await mlService.getCoursePredictions(courseCode);
-        setPredictions(preds);
-        alert(`AI Analysis complete for ${courseCode}!`);
-      }
+      await mlService.generatePredictions(courseCode);
+      const preds = await mlService.getCoursePredictions(courseCode);
+      setPredictions(preds);
+      alert('AI Analysis complete!');
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.error || 'Failed to run AI analysis.');
@@ -515,10 +501,10 @@ export default function TeacherDashboard({ page, setPage }) {
     if (!anno.trim()) return;
     try {
       if (annoTarget === 'Department_Broadcast') {
-          await teacherService.sendDepartmentAnnouncement(anno);
+        await teacherService.sendDepartmentAnnouncement(anno);
       } else {
-          const targetCourseCode = annoTarget === 'All' ? null : annoTarget;
-          await teacherService.sendAnnouncement(anno, targetCourseCode);
+        const targetCourseCode = annoTarget === 'All' ? null : annoTarget;
+        await teacherService.sendAnnouncement(anno, targetCourseCode);
       }
       setAnnoSent(true);
       setAnno('');
@@ -606,7 +592,7 @@ export default function TeacherDashboard({ page, setPage }) {
         if (cA < cB) return -1;
         if (cA > cB) return 1;
       }
-      
+
       let valA = a[sortField] || '';
       let valB = b[sortField] || '';
       if (typeof valA === 'string') valA = valA.toLowerCase();
@@ -640,7 +626,7 @@ export default function TeacherDashboard({ page, setPage }) {
       // Unassigned at bottom
       if (a.assignedSubjects.length === 0 && b.assignedSubjects.length > 0) return 1;
       if (a.assignedSubjects.length > 0 && b.assignedSubjects.length === 0) return -1;
-      
+
       // Sort by first subject
       const aSub = a.assignedSubjects[0] || '';
       const bSub = b.assignedSubjects[0] || '';
@@ -666,23 +652,23 @@ export default function TeacherDashboard({ page, setPage }) {
 
   if (page === 'marks') {
     return (
-      <MarksTab 
-        ci={ci} 
-        setCi={setCi} 
-        courses={courses} 
-        C={C} 
-        savingMarks={savingMarks} 
-        handleSaveMarks={handleSaveMarks} 
-        studentsLoading={studentsLoading} 
-        courseStudents={courseStudents} 
-        handleMarkChange={handleMarkChange} 
-        renderCourseTabs={renderCourseTabs} 
+      <MarksTab
+        ci={ci}
+        setCi={setCi}
+        courses={courses}
+        C={C}
+        savingMarks={savingMarks}
+        handleSaveMarks={handleSaveMarks}
+        studentsLoading={studentsLoading}
+        courseStudents={courseStudents}
+        handleMarkChange={handleMarkChange}
+        renderCourseTabs={renderCourseTabs}
       />
     );
   }
 
   if (page === 'risk') return <RiskTab C={C} rf={rf} setRf={setRf} courseStudents={courseStudents} predictions={predictions} studentsLoading={studentsLoading} runningAI={runningAI} handleRunAI={handleRunAI} renderCourseTabs={renderCourseTabs} interModalUsn={interModalUsn} setInterModalUsn={setInterModalUsn} interAction={interAction} setInterAction={setInterAction} interNotes={interNotes} setInterNotes={setInterNotes} savingIntervention={savingIntervention} handleLogIntervention={handleLogIntervention} />;
-  
+
   if (page === 'ai_diagnostics') return <AiDiagnosticsTab C={C} courseStudents={courseStudents} predictions={predictions} runningAI={runningAI} handleRunAI={handleRunAI} renderCourseTabs={renderCourseTabs} />;
 
   if (page === 'students') return <StudentsTab ci={ci} C={C} courseStudents={courseStudents} studentsLoading={studentsLoading} renderCourseTabs={renderCourseTabs} handleSort={handleSort} getDerivedStudents={getDerivedStudents} interactModalUsn={interactModalUsn} setInteractModalUsn={setInteractModalUsn} interactMessage={interactMessage} setInteractMessage={setInteractMessage} interactType={interactType} setInteractType={setInteractType} interactSuccess={interactSuccess} setInteractSuccess={setInteractSuccess} savingInteractMessage={savingInteractMessage} handleSendDirectMessage={handleSendDirectMessage} />;
@@ -699,82 +685,82 @@ export default function TeacherDashboard({ page, setPage }) {
 
   if (page === 'settings') return <SettingsTab profile={profile} courses={courses} dashboardData={dashboardData} profileName={profileName} setProfileName={setProfileName} profileEmail={profileEmail} setProfileEmail={setProfileEmail} savingProfile={savingProfile} handleUpdateProfile={handleUpdateProfile} customThresholds={customThresholds} setCustomThresholds={setCustomThresholds} emailOnHighRisk={emailOnHighRisk} setEmailOnHighRisk={setEmailOnHighRisk} autoNotifyAbsentee={autoNotifyAbsentee} setAutoNotifyAbsentee={setAutoNotifyAbsentee} consultationSlots={consultationSlots} setConsultationSlots={setConsultationSlots} removeSlot={removeSlot} newSlotDay={newSlotDay} setNewSlotDay={setNewSlotDay} newSlotStart={newSlotStart} setNewSlotStart={setNewSlotStart} newSlotEnd={newSlotEnd} setNewSlotEnd={setNewSlotEnd} />;
 
-    // --- MAIN DASHBOARD OVERVIEW ---
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ fontSize: '1.28rem', fontWeight: 700, color: t.text }}>Welcome, {profile.name ? profile.name.split(' ').pop() : 'Teacher'}</div>
-            <div style={{ fontSize: '.78rem', color: t.muted, marginTop: 2 }}>
-              {profile.designation || ''} · {profile.department || ''}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '.45rem' }}>
-            <button className="btn btn-tl" onClick={() => setPage('attendance')}>
-              <CheckCircle size={13} /> Attendance
-            </button>
-            <button className="btn btn-wh" onClick={() => setPage('marks')}>
-              <Edit2 size={13} /> Enter Marks
-            </button>
+  // --- MAIN DASHBOARD OVERVIEW ---
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <div style={{ fontSize: '1.28rem', fontWeight: 700, color: t.text }}>Welcome, {profile.name ? profile.name.split(' ').pop() : 'Teacher'}</div>
+          <div style={{ fontSize: '.78rem', color: t.muted, marginTop: 2 }}>
+            {profile.designation || ''} · {profile.department || ''}
           </div>
         </div>
 
-        <div className="g4">
-          <KPI label="Students Taught" value={d.kpis?.totalUniqueStudents || 0} delta="this semester" up={null} icon={Users} accent="rgba(255,255,255,.8)" dk />
-          <KPI label="Avg. Attendance" value={`${d.kpis?.avgAttendance || 0}%`} delta="all classes" up={null} icon={CheckCircle} accent={t.rMed} dk />
-          <KPI label="High Risk" value={courseStudents.filter(s => {
-            const p = predictions.find(pred => pred.usn === s.usn);
-            return (p ? p.risk_level : s.risk) === 'High';
-          }).length} delta={ci === -1 ? "all students" : "selected course"} up={false} icon={AlertTriangle} accent={t.rHigh} dk />
-          <KPI label="Urgent Tasks" value={tasksList.filter((x) => !x.done && x.urgent).length} delta="pending today" up={false} icon={ClipboardList} accent={t.rMed} dk />
+        <div style={{ display: 'flex', gap: '.45rem' }}>
+          <button className="btn btn-tl" onClick={() => setPage('attendance')}>
+            <CheckCircle size={13} /> Attendance
+          </button>
+          <button className="btn btn-wh" onClick={() => setPage('marks')}>
+            <Edit2 size={13} /> Enter Marks
+          </button>
         </div>
+      </div>
 
-        <div className="g2">
-          <div className="card-dk">
-            <CH title="My Courses" sub="Click to select" dk />
-            <div style={{ padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
-              {courses.map((c, i) => (
-                <div
-                  key={c.code}
-                  onClick={() => setCi(i)}
-                  style={{
-                    padding: '.875rem 1rem',
-                    border: `1px solid ${i === ci ? 'rgba(255,255,255,.25)' : t.border}`,
-                    borderRadius: 9,
-                    cursor: 'pointer',
-                    background: i === ci ? 'rgba(255,255,255,.07)' : 'transparent',
-                  }}
-                >
-                  <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: '.58rem', color: 'rgba(255,255,255,.45)' }}>
-                    {c.code} ({c.section})
-                  </div>
-                  <div style={{ fontSize: '.86rem', fontWeight: 600, color: t.text, marginTop: 2 }}>{c.name}</div>
-                  <div style={{ fontSize: '.72rem', color: t.muted, marginBottom: '.42rem' }}>
-                    {c.student_count} students enrolled
-                  </div>
+      <div className="g4">
+        <KPI label="Students Taught" value={d.kpis?.totalUniqueStudents || 0} delta="this semester" up={null} icon={Users} accent="rgba(255,255,255,.8)" dk />
+        <KPI label="Avg. Attendance" value={`${d.kpis?.avgAttendance || 0}%`} delta="all classes" up={null} icon={CheckCircle} accent={t.rMed} dk />
+        <KPI label="High Risk" value={courseStudents.filter(s => {
+          const p = predictions.find(pred => pred.usn === s.usn);
+          return (p ? p.risk_level : s.risk) === 'High';
+        }).length} delta={ci === -1 ? "all students" : "selected course"} up={false} icon={AlertTriangle} accent={t.rHigh} dk />
+        <KPI label="Urgent Tasks" value={tasksList.filter((x) => !x.done && x.urgent).length} delta="pending today" up={false} icon={ClipboardList} accent={t.rMed} dk />
+      </div>
+
+      <div className="g2">
+        <div className="card-dk">
+          <CH title="My Courses" sub="Click to select" dk />
+          <div style={{ padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+            {courses.map((c, i) => (
+              <div
+                key={c.code}
+                onClick={() => setCi(i)}
+                style={{
+                  padding: '.875rem 1rem',
+                  border: `1px solid ${i === ci ? 'rgba(255,255,255,.25)' : t.border}`,
+                  borderRadius: 9,
+                  cursor: 'pointer',
+                  background: i === ci ? 'rgba(255,255,255,.07)' : 'transparent',
+                }}
+              >
+                <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: '.58rem', color: 'rgba(255,255,255,.45)' }}>
+                  {c.code} ({c.section})
                 </div>
-              ))}
-            </div>
+                <div style={{ fontSize: '.86rem', fontWeight: 600, color: t.text, marginTop: 2 }}>{c.name}</div>
+                <div style={{ fontSize: '.72rem', color: t.muted, marginBottom: '.42rem' }}>
+                  {c.student_count} students enrolled
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
 
-          <div className="card-dk">
-            <CH title="Attendance Trend" sub="Weekly averages" dk />
-            <div style={{ padding: '.75rem .25rem .5rem' }}>
-              <ResponsiveContainer width="100%" height={230}>
-                <AreaChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="week" tick={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fill: t.muted }} axisLine={false} tickLine={false} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: t.muted }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CT />} />
-                  {courses.map((c, i) => (
-                    <Area key={c.code} type="monotone" dataKey={c.code} name={c.code} stroke={`rgba(255,255,255,${1 - i * 0.3})`} fill={`rgba(255,255,255,${0.15 - i * 0.05})`} strokeWidth={2} />
-                  ))}
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+        <div className="card-dk">
+          <CH title="Attendance Trend" sub="Weekly averages" dk />
+          <div style={{ padding: '.75rem .25rem .5rem' }}>
+            <ResponsiveContainer width="100%" height={230}>
+              <AreaChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="week" tick={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fill: t.muted }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: t.muted }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CT />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                {courses.map((c, i) => (
+                  <Area key={c.code} type="monotone" dataKey={c.code} name={c.code} stroke={`rgba(255,255,255,${1 - i * 0.3})`} fill={`rgba(255,255,255,${0.15 - i * 0.05})`} strokeWidth={2} />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}

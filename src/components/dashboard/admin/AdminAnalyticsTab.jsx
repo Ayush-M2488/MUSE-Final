@@ -71,7 +71,7 @@ export default function AdminAnalyticsTab({ roleDist, deptCapacity, riskDist, de
                                 <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F7" />
                                 <XAxis dataKey="dept" tick={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', fill: t.muted }} axisLine={false} tickLine={false} interval={0} />
                                 <YAxis tick={{ fontSize: 10, fill: t.muted }} axisLine={false} tickLine={false} />
-                                <Tooltip content={<CT />} />
+                                <Tooltip content={<CT />} cursor={{ fill: '#F9FAFB' }} />
                                 <Legend iconSize={8} wrapperStyle={{ fontSize: '.7rem' }} />
                                 <Bar dataKey="high" name="High Risk" fill={t.rHigh} stackId="a" />
                                 <Bar dataKey="med" name="Medium Risk" fill={t.rMed} stackId="a" />
