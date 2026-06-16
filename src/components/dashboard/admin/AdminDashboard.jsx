@@ -540,7 +540,7 @@ export default function AdminDashboard({ page, setPage }) {
         return <AcademicDataTab 
             t={t} cfg={cfg} setPage={setPage} users={users}
             hodModal={hodModal} setHodModal={setHodModal} handleAssignHod={handleAssignHod}
-            timetables={timetables}
+            timetables={timetables} holidays={analytics?.holidays || []}
         />;
     }
 

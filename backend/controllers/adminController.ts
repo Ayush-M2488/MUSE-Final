@@ -132,6 +132,8 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
         });
         const activeModel = latestPrediction ? latestPrediction.model_version : 'No model data yet';
 
+        const holidays = await prisma.holiday.findMany({ orderBy: { date: 'asc' } });
+
         // Send everything back
         res.json({
             success: true,
@@ -145,7 +147,12 @@ export const getDashboardAnalytics: RequestHandler = async (req, res, next) => {
                 },
                 riskDist,
                 deptRisk,
-                attTrend
+                attTrend,
+                holidays: holidays.map((h: any) => ({
+                    date: new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+                    name: h.description.length > 30 ? h.description.substring(0, 30) + '...' : h.description,
+                    type: h.course_code ? `Course Specific (${h.course_code})` : 'Institutional'
+                }))
             }
         });
 

@@ -11,7 +11,7 @@ const Card = ({ children, style }) => (
 
 export default function AcademicDataTab({ 
     t, cfg, setPage, users, 
-    hodModal, setHodModal, handleAssignHod, timetables 
+    hodModal, setHodModal, handleAssignHod, timetables, holidays = [] 
 }) {
         const deptsMap = {};
         users.forEach(u => {
@@ -29,13 +29,15 @@ export default function AcademicDataTab({
         });
         const departments = Object.values(deptsMap).filter(d => d.id && d.id !== 'N/A');
 
-        const holidays = [
-            { date: 'Aug 15, 2024', name: 'Independence Day', type: 'National' },
-            { date: 'Sep 07, 2024', name: 'Ganesh Chaturthi', type: 'Festival' },
-            { date: 'Oct 02, 2024', name: 'Gandhi Jayanti', type: 'National' },
-            { date: 'Oct 31, 2024', name: 'Diwali Break', type: 'Festival' },
-            { date: 'Dec 25, 2024', name: 'Christmas', type: 'Festival' }
+        const staticHolidays = [
+            { date: 'Aug 15, 2026', name: 'Independence Day', type: 'National' },
+            { date: 'Sep 07, 2026', name: 'Ganesh Chaturthi', type: 'Festival' },
+            { date: 'Oct 02, 2026', name: 'Gandhi Jayanti', type: 'National' },
+            { date: 'Oct 31, 2026', name: 'Diwali Break', type: 'Festival' },
+            { date: 'Dec 25, 2026', name: 'Christmas', type: 'Festival' }
         ];
+        
+        const combinedHolidays = [...staticHolidays, ...holidays].sort((a, b) => new Date(a.date) - new Date(b.date));
 
         const classrooms = [
             { room: '101', type: 'Lecture Hall', capacity: 60, status: 'Operational', issue: 'None' },
@@ -155,7 +157,7 @@ export default function AcademicDataTab({
                                     <tr><th>Date</th><th>Occasion</th><th>Type</th></tr>
                                 </thead>
                                 <tbody>
-                                    {holidays.map((h, i) => (
+                                    {combinedHolidays.map((h, i) => (
                                         <tr key={i}>
                                             <td style={{ fontWeight: 500 }}>{h.date}</td>
                                             <td>{h.name}</td>
@@ -168,59 +170,7 @@ export default function AcademicDataTab({
                     </Card>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-                    <Card>
-                        <CH title="Classroom & Resource Allocation" sub="Physical infrastructure tracking" />
-                        <div style={{ overflowX: 'auto' }}>
-                            <table className="tbl tbl-lt" style={{ minWidth: 400 }}>
-                                <thead>
-                                    <tr><th>Room No.</th><th>Type</th><th>Capacity</th><th>Status</th></tr>
-                                </thead>
-                                <tbody>
-                                    {classrooms.map((c, i) => (
-                                        <tr key={i}>
-                                            <td style={{ fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>{c.room}</td>
-                                            <td style={{ fontWeight: 500 }}>{c.type}</td>
-                                            <td>{c.capacity}</td>
-                                            <td>
-                                                {c.status === 'Operational' ? 
-                                                    <span className="b bM" style={{ background: '#DCFCE7', color: '#166534' }}>{c.status}</span> :
-                                                    <span className="b bM" style={{ background: '#FEE2E2', color: '#991B1B' }}>{c.status} ({c.issue})</span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
 
-                    <Card>
-                        <CH title="Master Timetable" sub="All registered course schedules" />
-                        <div style={{ overflowX: 'auto' }}>
-                            <table className="tbl tbl-lt" style={{ minWidth: 400 }}>
-                                <thead>
-                                    <tr><th>Course Code</th><th>Faculty ID</th><th>Day</th><th>Time</th><th>Room</th></tr>
-                                </thead>
-                                <tbody>
-                                    {timetables.length === 0 ? (
-                                        <tr><td colSpan="5" style={{ textAlign: 'center', color: t.muted }}>No timetables found.</td></tr>
-                                    ) : (
-                                        timetables.map(tt => (
-                                            <tr key={tt.id}>
-                                                <td style={{ fontWeight: 600, color: t.teal, fontFamily: 'JetBrains Mono, monospace' }}>{tt.course_code}</td>
-                                                <td style={{ fontWeight: 500 }}>{tt.faculty_emp_id}</td>
-                                                <td>{tt.day_of_week}</td>
-                                                <td>{tt.start_time} - {tt.end_time}</td>
-                                                <td><span className="b bM">{tt.room}</span></td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
-                </div>
             </div>
         );
     
