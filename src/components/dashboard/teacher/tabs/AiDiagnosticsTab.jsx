@@ -7,8 +7,12 @@ import { BrainCircuit, AlertTriangle, ShieldCheck, Info } from 'lucide-react';
 const CustomBarShape = (props) => {
     const { fill, x, y, width, height, payload } = props;
     const isNegative = payload.value < 0;
+    
+    const normalizedWidth = Math.abs(width);
+    const normalizedX = width < 0 ? x + width : x;
+    
     const radius = isNegative ? [4, 0, 0, 4] : [0, 4, 4, 0];
-    return <Rectangle x={x} y={y} width={width} height={height} fill={fill} radius={radius} />;
+    return <Rectangle x={normalizedX} y={y} width={normalizedWidth} height={height} fill={fill} radius={radius} />;
 };
 
 export default function AiDiagnosticsTab({ C, courseStudents, predictions, runningAI, handleRunAI, renderCourseTabs }) {
@@ -125,14 +129,9 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                     dk
                 />
                 {predictions && predictions.length > 0 && (
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-gh" onClick={() => handleRunAI()} disabled={runningAI}>
-                            {runningAI ? 'Analyzing...' : 'Analyze Current'}
-                        </button>
-                        <button className="btn btn-wh" onClick={() => handleRunAI('all')} disabled={runningAI}>
-                            {runningAI ? 'Analyzing All...' : 'Analyze ALL Subjects'}
-                        </button>
-                    </div>
+                    <button className="btn btn-wh" onClick={() => handleRunAI(C?.code || 'all')} disabled={runningAI}>
+                        {runningAI ? 'Analyzing...' : 'Run New Analysis'}
+                    </button>
                 )}
             </div>
 
