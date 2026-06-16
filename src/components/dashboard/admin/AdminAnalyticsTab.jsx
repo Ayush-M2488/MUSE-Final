@@ -22,7 +22,7 @@ export default function AdminAnalyticsTab({ roleDist, deptCapacity, riskDist, de
                     <div style={{ padding: '1rem' }}>
                         <ResponsiveContainer width="100%" height={200}>
                             <PieChart>
-                                <Pie data={roleDist} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value" label>
+                                <Pie data={roleDist} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
                                     {roleDist.map((e, i) => <Cell key={i} fill={e.fill} />)}
                                 </Pie>
                                 <Tooltip />
