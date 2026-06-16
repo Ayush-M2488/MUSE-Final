@@ -43,7 +43,7 @@ export default function MarksTab({ d, C }) {
                                 tickLine={false}
                             />
                             <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: t.muted }} axisLine={false} tickLine={false} />
-                            <Tooltip content={<CT />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                            <Tooltip content={<CT />} cursor={{ fill: 'rgba(255,255,255,0.1)' }} />
                             <Legend iconSize={8} wrapperStyle={{ fontSize: '.7rem', color: t.sub }} />
                             {subjectsList.map((s, i) => {
                                 const key = s.code || s.name;

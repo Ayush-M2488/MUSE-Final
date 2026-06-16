@@ -40,7 +40,7 @@ export default function AdminAnalyticsTab({ roleDist, deptCapacity, riskDist, de
                                 <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F7" horizontal={false} />
                                 <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: t.muted }} />
                                 <YAxis type="category" dataKey="dept" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', fill: t.muted }} width={80} />
-                                <Tooltip cursor={{ fill: '#F9FAFB' }} />
+                                <Tooltip cursor={{ fill: '#E5E7EB' }} />
                                 <Bar dataKey="students" fill={t.teal} radius={[0, 4, 4, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
@@ -71,7 +71,7 @@ export default function AdminAnalyticsTab({ roleDist, deptCapacity, riskDist, de
                                 <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F7" />
                                 <XAxis dataKey="dept" tick={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', fill: t.muted }} axisLine={false} tickLine={false} interval={0} />
                                 <YAxis tick={{ fontSize: 10, fill: t.muted }} axisLine={false} tickLine={false} />
-                                <Tooltip content={<CT />} cursor={{ fill: '#F9FAFB' }} />
+                                <Tooltip content={<CT />} cursor={{ fill: '#E5E7EB' }} />
                                 <Legend iconSize={8} wrapperStyle={{ fontSize: '.7rem' }} />
                                 <Bar dataKey="high" name="High Risk" fill={t.rHigh} stackId="a" />
                                 <Bar dataKey="med" name="Medium Risk" fill={t.rMed} stackId="a" />

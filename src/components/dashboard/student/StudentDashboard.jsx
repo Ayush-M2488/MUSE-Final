@@ -580,7 +580,7 @@ export default function StudentDashboard({ page, setPage }) {
                                     tickLine={false}
                                 />
                                 <YAxis domain={[0, 25]} tick={{ fontSize: 10, fill: t.muted }} axisLine={false} tickLine={false} />
-                                <Tooltip content={<CT />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                                <Tooltip content={<CT />} cursor={{ fill: 'rgba(255,255,255,0.1)' }} />
                                 <Legend iconSize={8} wrapperStyle={{ fontSize: '.68rem', color: t.sub }} />
                                 <Bar dataKey="ia1" name="IA-1" fill={DK.chart[0]} radius={[3, 3, 0, 0]} />
                                 <Bar dataKey="ia2" name="IA-2" fill={DK.chart[1]} radius={[3, 3, 0, 0]} />

@@ -248,7 +248,7 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                                             fontWeight={500}
                                             width={100}
                                         />
-                                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.1)' }} />
                                         <ReferenceLine x={0} stroke={t.muted} strokeWidth={2} />
                                         <Bar dataKey="value" shape={<CustomBarShape />} barSize={32}>
                                             {chartData.map((entry, index) => (

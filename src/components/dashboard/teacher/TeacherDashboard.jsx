@@ -752,7 +752,7 @@ export default function TeacherDashboard({ page, setPage }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                 <XAxis dataKey="week" tick={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fill: t.muted }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: t.muted }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CT />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <Tooltip content={<CT />} cursor={{ fill: 'rgba(255,255,255,0.1)' }} />
                 {courses.map((c, i) => (
                   <Area key={c.code} type="monotone" dataKey={c.code} name={c.code} stroke={`rgba(255,255,255,${1 - i * 0.3})`} fill={`rgba(255,255,255,${0.15 - i * 0.05})`} strokeWidth={2} />
                 ))}
