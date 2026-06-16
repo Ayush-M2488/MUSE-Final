@@ -18,6 +18,14 @@ const CustomBarShape = (props) => {
 export default function AiDiagnosticsTab({ C, courseStudents, predictions, runningAI, handleRunAI, renderCourseTabs }) {
     const [selectedUsn, setSelectedUsn] = useState('');
 
+    const hasSufficientData = useMemo(() => {
+        if (!courseStudents || courseStudents.length === 0) return false;
+        // Check if AT LEAST ONE student has some marks or attendance data
+        // If everyone has completely null IA1 and 0 attendance, the course is completely empty data-wise
+        const hasData = courseStudents.some(s => s.ia1 || s.ia2 || s.ia3 || s.practical || s.att > 0);
+        return hasData;
+    }, [courseStudents]);
+
     // Prepare options for the dropdown
     const studentOptions = useMemo(() => {
         if (!predictions || predictions.length === 0) return [];
@@ -129,7 +137,7 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                     dk
                 />
                 {predictions && predictions.length > 0 && (
-                    <button className="btn btn-wh" onClick={() => handleRunAI(C?.code || 'all')} disabled={runningAI}>
+                    <button className="btn btn-wh" onClick={() => handleRunAI(C?.code || 'all')} disabled={runningAI || !hasSufficientData} title={!hasSufficientData ? "Insufficient data to run analysis" : ""}>
                         {runningAI ? 'Analyzing...' : 'Run New Analysis'}
                     </button>
                 )}
@@ -145,10 +153,22 @@ export default function AiDiagnosticsTab({ C, courseStudents, predictions, runni
                 <div style={{ padding: '3rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: `1px solid ${t.border}` }}>
                     <BrainCircuit size={48} style={{ color: t.muted, margin: '0 auto 1rem', opacity: 0.5 }} />
                     <h3 style={{ color: t.text, marginBottom: '0.5rem' }}>No AI Diagnostics Available</h3>
-                    <p style={{ color: t.muted, fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
-                        Please run the AI Risk Analysis engine first to generate SHAP explanations for your students.
-                    </p>
-                    <button className="btn btn-pm" onClick={() => handleRunAI(C?.code || 'all')}>
+                    
+                    {!hasSufficientData ? (
+                        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: `1px solid ${t.rHigh}`, padding: '1rem', borderRadius: '8px', maxWidth: '450px', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', textAlign: 'left' }}>
+                            <AlertTriangle size={20} style={{ color: t.rHigh, flexShrink: 0, marginTop: '2px' }} />
+                            <div>
+                                <div style={{ color: t.rHigh, fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.25rem' }}>Insufficient Data</div>
+                                <div style={{ color: t.text, fontSize: '0.8rem', opacity: 0.8 }}>Students in this class lack the minimum attendance or marks required for the AI model to generate accurate predictions. Please add marks first.</div>
+                            </div>
+                        </div>
+                    ) : (
+                        <p style={{ color: t.muted, fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
+                            Please run the AI Risk Analysis engine first to generate SHAP explanations for your students.
+                        </p>
+                    )}
+
+                    <button className="btn btn-pm" onClick={() => handleRunAI(C?.code || 'all')} disabled={!hasSufficientData}>
                         Run AI Analysis Now
                     </button>
                 </div>

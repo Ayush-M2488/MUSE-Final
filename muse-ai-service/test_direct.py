@@ -1,31 +1,22 @@
-import sys
-import os
-
-# Append current directory to path
-sys.path.append(os.path.dirname(__file__))
-
-import app
-# Force fallback mode!
-app.loaded_model = None
-app.explainer = None
-
-# Create a test client
-client = app.app.test_client()
+import requests
+import json
 
 data = {
     "students": [
         {
-            "usn": "1MS21CI001",
+            "usn": "1RN21CS001",
             "attendance": 80,
-            "ia1": 15,
-            "ia2": 15,
-            "ia3": 15,
-            "practical": 30,
-            "cgpa": 8.5
+            "ia1": 25,
+            "ia2": 24,
+            "ia3": 26,
+            "practical": 18
         }
     ]
 }
 
-response = client.post('/predict', json=data)
-print("STATUS:", response.status_code)
-print("BODY:", response.get_data(as_text=True))
+try:
+    resp = requests.post("http://127.0.0.1:5000/predict", json=data)
+    print("Status:", resp.status_code)
+    print(resp.text)
+except Exception as e:
+    print(e)

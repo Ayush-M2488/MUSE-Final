@@ -200,6 +200,44 @@ export const Loader = ({ dk }) => {
     );
 };
 
+export const EmptyState = ({ icon: Icon, title, sub, dk = true }) => {
+    const t = dk ? DK : LT;
+    
+    return (
+        <div 
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '3.5rem 1.5rem',
+                textAlign: 'center',
+                background: dk ? 'rgba(255,255,255,0.02)' : '#F9FAFB',
+                borderRadius: '12px',
+                border: dk ? '1px dashed rgba(255,255,255,0.1)' : '1px dashed #E5E7EB',
+                margin: '1rem 0'
+            }}
+        >
+            <div 
+                style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    background: dk ? 'rgba(255,255,255,0.05)' : '#F3F4F6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '1rem'
+                }}
+            >
+                <Icon size={22} style={{ color: t.muted, opacity: 0.7 }} strokeWidth={1.5} />
+            </div>
+            <div style={{ fontSize: '.95rem', fontWeight: 600, color: t.text, marginBottom: '.25rem' }}>{title}</div>
+            <div style={{ fontSize: '.75rem', color: t.muted, maxWidth: 300, lineHeight: 1.5 }}>{sub}</div>
+        </div>
+    );
+};
+
 const NAV = {
     student: [
         {

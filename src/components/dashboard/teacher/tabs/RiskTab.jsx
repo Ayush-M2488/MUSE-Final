@@ -47,16 +47,7 @@ export default function RiskTab({
         <CH
           title={`Risk · ${C?.code || ''}`}
           sub="XAI-based · Accept or flag AI predictions"
-          right={
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className="btn btn-gh" onClick={() => handleRunAI()} disabled={runningAI}>
-                {runningAI ? 'Analyzing...' : 'Analyze Current'}
-              </button>
-              <button className="btn btn-tl" onClick={() => handleRunAI('all')} disabled={runningAI}>
-                {runningAI ? 'Analyzing All...' : 'Analyze ALL Subjects'}
-              </button>
-            </div>
-          }
+          right={<button className="btn btn-tl" onClick={handleRunAI} disabled={runningAI}>{runningAI ? 'Analyzing...' : 'Run AI Analysis'}</button>}
           dk
         />
         <table className="tbl tbl-dk" style={{ minWidth: 950 }}>

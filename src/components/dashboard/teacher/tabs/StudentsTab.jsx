@@ -1,7 +1,8 @@
 import React from 'react';
 import { CH, Pbar } from '../../shared/Primitives';
 import { DK as t } from '../../shared/theme';
-import { Send, CheckCircle } from 'lucide-react';
+import { Send, CheckCircle, Users } from 'lucide-react';
+import { EmptyState } from '../../shared/Primitives';
 
 export default function StudentsTab({
   ci,
@@ -44,7 +45,14 @@ export default function StudentsTab({
             </tr>
           </thead>
           <tbody>
-            {studentsLoading ? <tr><td colSpan="7">Loading students...</td></tr> :
+            {studentsLoading ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '2rem' }}>Loading students...</td></tr> :
+              getDerivedStudents().length === 0 ? (
+                <tr>
+                  <td colSpan="8" style={{ padding: 0 }}>
+                    <EmptyState icon={Users} title="Empty Roster" sub="No students are currently mapped to this view." />
+                  </td>
+                </tr>
+              ) :
               getDerivedStudents().map((s) => (
                 <tr key={s.usn}>
                   <td>{s.usn}</td>

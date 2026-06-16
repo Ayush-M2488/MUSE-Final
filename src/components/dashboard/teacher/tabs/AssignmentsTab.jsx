@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, CheckCircle, ClipboardList, Edit2, Plus, Bell, Download, X, Paperclip, FileText, AlertTriangle, Send, Trash2, Users } from 'lucide-react';
-import { CH, Loader, Pbar } from '../../shared/Primitives';
+import { CH, Loader, Pbar, EmptyState } from '../../shared/Primitives';
 import { DK as t } from '../../shared/theme';
 import { assignmentService } from '../../../../services/api';
 
@@ -341,9 +341,7 @@ export default function AssignmentsTab({ dashboardData }) {
 
           <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
             {filteredAssigns.length === 0 ? (
-              <div className="card-dk" style={{ padding: '2rem', textAlign: 'center', color: t.muted, fontSize: '.9rem' }}>
-                No assignments found.
-              </div>
+              <EmptyState icon={ClipboardList} title="No Assignments" sub={`You haven't posted any ${assignTab === 'student' ? 'student' : 'self'} assignments yet.`} />
             ) : (
               filteredAssigns.map((a) => (
                 <div key={a.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>

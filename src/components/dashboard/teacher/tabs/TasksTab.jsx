@@ -1,6 +1,7 @@
 import React from 'react';
 import { DK as t } from '../../shared/theme';
-import { Check, Plus, Trash2 } from 'lucide-react';
+import { Check, Plus, Trash2, CheckCircle } from 'lucide-react';
+import { EmptyState } from '../../shared/Primitives';
 
 export default function TasksTab({
   tasksList,
@@ -61,6 +62,10 @@ export default function TasksTab({
             <button className="btn btn-gh" onClick={() => setTaskModalOpen(false)}>Cancel</button>
           </div>
         </div>
+      )}
+
+      {tasksList.length === 0 && (
+          <EmptyState icon={CheckCircle} title="All Caught Up!" sub="You have no pending or completed tasks." />
       )}
 
       {tasksList.map((task) => (

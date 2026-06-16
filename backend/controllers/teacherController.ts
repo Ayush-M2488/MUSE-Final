@@ -9,7 +9,7 @@ export const getTeacherDashboard: RequestHandler = async (req, res, next) => {
         res.status(400).json({ error: 'Employee ID not found in token' });
         return;
     }
-    
+
     try {
         const faculty = await prisma.faculty.findUnique({
             where: { emp_id: empId },
@@ -17,8 +17,8 @@ export const getTeacherDashboard: RequestHandler = async (req, res, next) => {
         });
 
         if (!faculty) {
-             res.status(404).json({ error: 'Teacher profile not found' });
-             return;
+            res.status(404).json({ error: 'Teacher profile not found' });
+            return;
         }
 
         const enrollments = await prisma.enrollment.groupBy({
@@ -29,7 +29,7 @@ export const getTeacherDashboard: RequestHandler = async (req, res, next) => {
 
         const courseCodes = [...new Set(enrollments.map(e => e.course_code))];
         const studentUsns = [...new Set(await prisma.enrollment.findMany({ where: { faculty_emp_id: empId }, select: { usn: true } }).then(res => res.map(r => r.usn)))];
-        
+
         const coursesData = await prisma.course.findMany({
             where: { course_code: { in: courseCodes } }
         });
@@ -66,7 +66,7 @@ export const getTeacherDashboard: RequestHandler = async (req, res, next) => {
             const weekStr = `W${Math.ceil(d.getDate() / 7)}`;
             if (!trendMap[weekStr]) trendMap[weekStr] = {};
             if (!trendMap[weekStr][a.course_code]) trendMap[weekStr][a.course_code] = { total: 0, present: 0 };
-            
+
             trendMap[weekStr][a.course_code].total++;
             if (a.status === 'present') trendMap[weekStr][a.course_code].present++;
         });
@@ -298,13 +298,13 @@ export const getCourseStudents: RequestHandler = async (req, res, next) => {
             const ia3Find = s.assessments.find(a => a.assessment_type === 'IA-3');
             const practicalFind = s.assessments.find(a => a.assessment_type === 'Practical');
             const finalExamFind = s.assessments.find(a => a.assessment_type === 'Final');
-            
+
             const ia1 = ia1Find ? ia1Find.score.toNumber() : null;
             const ia2 = ia2Find ? ia2Find.score.toNumber() : null;
             const ia3 = ia3Find ? ia3Find.score.toNumber() : null;
             const practical = practicalFind ? practicalFind.score.toNumber() : null;
             const finalExam = finalExamFind ? finalExamFind.score.toNumber() : null;
-            
+
             // Attendance computation
             let totalClasses = s.attendance.length;
             let attendedClasses = 0;
@@ -325,15 +325,15 @@ export const getCourseStudents: RequestHandler = async (req, res, next) => {
             const riskLevel = s.predictions?.[0]?.risk_level;
             if (riskLevel === 'High') riskMultiplier = 0.6;
             else if (riskLevel === 'Medium') riskMultiplier = 0.8;
-            
+
             let totalMarks = 0;
             let maxMarks = 0;
-            if (ia1 !== null) { totalMarks += ia1; maxMarks += 30; }
-            if (ia2 !== null) { totalMarks += ia2; maxMarks += 30; }
-            if (ia3 !== null) { totalMarks += ia3; maxMarks += 30; }
-            if (practical !== null) { totalMarks += practical; maxMarks += 20; }
+            if (ia1 !== null) { totalMarks += ia1; maxMarks += 50; }
+            if (ia2 !== null) { totalMarks += ia2; maxMarks += 50; }
+            if (ia3 !== null) { totalMarks += ia3; maxMarks += 50; }
+            if (practical !== null) { totalMarks += practical; maxMarks += 50; }
             const marksPercent = maxMarks > 0 ? (totalMarks / maxMarks) * 100 : 100;
-            
+
             const rawHealth = (attendance_percentage * 0.5) + (marksPercent * 0.5);
             const health_score = Math.round(rawHealth * riskMultiplier);
 
@@ -370,7 +370,7 @@ export const getCourseStudents: RequestHandler = async (req, res, next) => {
 export const markAttendance: RequestHandler = async (req, res, next) => {
     const empId = req.user?.roleId;
     const { courseCode } = req.params;
-    const { usn, status, date } = req.body; 
+    const { usn, status, date } = req.body;
 
     if (!empId) {
         res.status(400).json({ error: 'Employee ID not found in token' });
@@ -388,7 +388,7 @@ export const markAttendance: RequestHandler = async (req, res, next) => {
 
     try {
         const holiday = await prisma.holiday.findFirst({
-            where: { 
+            where: {
                 date: targetDate,
                 OR: [
                     { course_code: null },
@@ -518,7 +518,7 @@ export const markBatchAttendance: RequestHandler = async (req, res, next) => {
 
     try {
         const holiday = await prisma.holiday.findFirst({
-            where: { 
+            where: {
                 date: targetDate,
                 OR: [
                     { course_code: null },
@@ -765,7 +765,7 @@ export const deleteTask: RequestHandler = async (req, res, next) => {
 export const sendAnnouncement: RequestHandler = async (req, res, next) => {
     const userId = req.user?.id; // from JWT middleware
     const { content, target_course_code } = req.body;
-    
+
     if (!userId) return;
 
     try {
@@ -896,14 +896,14 @@ export const getDepartmentHub: RequestHandler = async (req, res, next) => {
 
         const deptStudents = await prisma.student.count({ where: { department: faculty.department } });
         const deptFaculty = await prisma.faculty.count({ where: { department: faculty.department } });
-        
+
         // Risk levels
         const predictions = await prisma.prediction.findMany({
             where: { student: { department: faculty.department } },
             orderBy: { predicted_at: 'desc' },
             distinct: ['usn']
         });
-        
+
         let high = 0, med = 0, low = 0;
         predictions.forEach(p => {
             if (p.risk_level === 'High') high++;
@@ -916,7 +916,7 @@ export const getDepartmentHub: RequestHandler = async (req, res, next) => {
             where: { department: faculty.department },
             include: { user: true, enrollments: { select: { course_code: true } } }
         });
-        
+
         const workload = allDeptFaculty.map(f => ({
             name: f.user.full_name,
             emp_id: f.emp_id,
@@ -994,22 +994,22 @@ export const getDepartmentFacultyDetails: RequestHandler = async (req, res, next
 
         const uniqueCourses = [];
         const seen = new Set();
-        
+
         for (const e of faculty.enrollments) {
             if (!seen.has(e.course_code)) {
                 seen.add(e.course_code);
-                
+
                 // Get course stats
                 const enrollments = await prisma.enrollment.findMany({ where: { course_code: e.course_code } });
                 const totalStudents = enrollments.length;
-                
+
                 let avgAttendance = 0;
                 const attendance = await prisma.attendance.findMany({ where: { course_code: e.course_code } });
                 if (attendance.length > 0) {
                     const present = attendance.filter(a => a.status === 'present').length;
                     avgAttendance = (present / attendance.length) * 100;
                 }
-                
+
                 const predictions = await prisma.prediction.findMany({
                     where: { course_code: e.course_code },
                     orderBy: { predicted_at: 'desc' },
@@ -1043,7 +1043,7 @@ export const sendDepartmentAnnouncement: RequestHandler = async (req, res, next)
     const userId = req.user?.id;
     const hodEmpId = req.user?.roleId;
     const { content } = req.body;
-    
+
     try {
         const hod = await prisma.faculty.findUnique({ where: { emp_id: hodEmpId } });
         if (!hod || !hod.is_hod) {
@@ -1070,7 +1070,7 @@ export const sendDepartmentAnnouncement: RequestHandler = async (req, res, next)
 export const assignMentor: RequestHandler = async (req, res, next) => {
     const hodEmpId = req.user?.roleId;
     const { usn, mentor_emp_id } = req.body;
-    
+
     try {
         const hod = await prisma.faculty.findUnique({ where: { emp_id: hodEmpId } });
         if (!hod || !hod.is_hod) {
@@ -1086,8 +1086,8 @@ export const assignMentor: RequestHandler = async (req, res, next) => {
 
         let mentorUserId = null;
         if (mentor_emp_id) {
-            const faculty = await prisma.faculty.findUnique({ 
-                where: { emp_id: mentor_emp_id } 
+            const faculty = await prisma.faculty.findUnique({
+                where: { emp_id: mentor_emp_id }
             });
             if (!faculty || faculty.department !== hod.department) {
                 res.status(404).json({ error: 'Mentor faculty not found in your department' });
@@ -1114,7 +1114,7 @@ export const updateTeacherSettings: RequestHandler = async (req, res, next) => {
         res.status(400).json({ error: 'Employee ID not found in token' });
         return;
     }
-    
+
     const { custom_thresholds, notification_prefs, consultation_hours } = req.body;
     try {
         await prisma.faculty.update({
@@ -1140,7 +1140,7 @@ export const getMyMentees: RequestHandler = async (req, res, next) => {
             where: { mentor_id: userId },
             include: { user: true, predictions: { orderBy: { predicted_at: 'desc' }, take: 1 } }
         });
-        
+
         const mapped = mentees.map(s => ({
             usn: s.usn,
             name: s.user.full_name,
@@ -1149,7 +1149,7 @@ export const getMyMentees: RequestHandler = async (req, res, next) => {
             risk: s.predictions[0]?.risk_level || 'Low',
             user_id: s.user_id
         }));
-        
+
         res.json(mapped);
     } catch (error) {
         console.error('Get Mentees Error:', error);
@@ -1160,14 +1160,14 @@ export const getMyMentees: RequestHandler = async (req, res, next) => {
 export const getMentorshipMessages: RequestHandler = async (req, res, next) => {
     const userId = req.user?.id;
     const { usn } = req.params;
-    
+
     try {
         const student = await prisma.student.findUnique({ where: { usn } });
         if (!student) {
             res.status(404).json({ error: 'Student not found' });
             return;
         }
-        
+
         if (student.mentor_id !== userId) {
             res.status(403).json({ error: 'Not authorized to view these messages' });
             return;
@@ -1178,7 +1178,7 @@ export const getMentorshipMessages: RequestHandler = async (req, res, next) => {
             orderBy: { sent_at: 'asc' },
             include: { sender: { select: { full_name: true, role: true } } }
         });
-        
+
         res.json(messages);
     } catch (error) {
         console.error('Get Mentorship Messages Error:', error);
@@ -1191,14 +1191,14 @@ export const sendMentorshipMessage: RequestHandler = async (req, res, next) => {
     const { usn } = req.params;
     const { content } = req.body;
     const file = req.file;
-    
+
     try {
         const student = await prisma.student.findUnique({ where: { usn } });
         if (!student || student.mentor_id !== userId) {
             res.status(403).json({ error: 'Not authorized to message this student' });
             return;
         }
-        
+
         const message = await prisma.mentorshipMessage.create({
             data: {
                 student_id: student.user_id,
@@ -1210,7 +1210,7 @@ export const sendMentorshipMessage: RequestHandler = async (req, res, next) => {
             },
             include: { sender: { select: { full_name: true, role: true } } }
         });
-        
+
         const io = req.app.get('io');
         if (io) {
             io.to(`mentorship_${student.user_id}`).emit('receive_message', message);
@@ -1245,19 +1245,19 @@ export const updateTimetableEntry: RequestHandler = async (req, res, next) => {
     const empId = req.user?.roleId;
     const { id } = req.params;
     const { day_of_week, start_time, end_time, room } = req.body;
-    
+
     if (!empId) {
         res.status(400).json({ error: 'Employee ID not found in token' });
         return;
     }
-    
+
     try {
         const existing = await prisma.timetable.findUnique({ where: { id } });
         if (!existing || existing.faculty_emp_id !== empId) {
             res.status(404).json({ error: 'Timetable entry not found or unauthorized' });
             return;
         }
-        
+
         const updated = await prisma.timetable.update({
             where: { id },
             data: { day_of_week, start_time, end_time, room }
