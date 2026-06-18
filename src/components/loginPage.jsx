@@ -31,7 +31,7 @@ export default function LoginPage({ initialRole = 'student', onBack, onLoginSucc
     setLoading(true);
 
     try {
-      const data = await authService.login({ email, password, role: activeRole });
+      const data = await authService.login({ email: email.trim().toLowerCase(), password, role: activeRole });
       localStorage.setItem('muse_token', data.token);
       localStorage.setItem('muse_role', data.user.role);
       localStorage.setItem('muse_user', JSON.stringify(data.user));

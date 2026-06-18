@@ -21,7 +21,7 @@ export const login: RequestHandler = async (req, res, next) => {
     try {
         // 1. Find user by email with relations
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { email: email.trim().toLowerCase() },
             include: {
                 student: true,
                 faculty: true,
@@ -121,7 +121,7 @@ export const updateProfile: RequestHandler = async (req, res, next) => {
 export const forgotPassword: RequestHandler = async (req, res, next) => {
     const { email } = req.body;
     try {
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
         if (!user) {
             // We return success anyway to prevent email enumeration
             res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });

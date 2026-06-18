@@ -268,7 +268,7 @@ export default function UserManagementTab({
                                 </td>
                                 <td>{u.email}</td>
                                 <td><span className={`b ${u.status === 'active' ? 'lAc' : 'lIn'}`}>{u.status}</span></td>
-                                <td>{u.last}</td>
+                                <td>{u.last ? new Date(u.last).toLocaleString() : 'Never'}</td>
                                 <td>
                                     <div style={{ display: 'flex', gap: '.4rem' }}>
                                         {u.role !== 'admin' && (

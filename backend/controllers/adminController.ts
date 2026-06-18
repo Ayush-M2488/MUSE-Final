@@ -234,7 +234,7 @@ export const getUsers: RequestHandler = async (req, res, next) => {
                 phone: u.student?.phone || null,
                 usn: u.student?.usn || null,
                 status: u.status,
-                last: u.last_login ? new Date(u.last_login).toLocaleString() : 'Never',
+                last: u.last_login ? u.last_login.toISOString() : null,
                 emp_id: u.faculty?.emp_id,
                 is_hod: u.faculty?.is_hod || false
             };
