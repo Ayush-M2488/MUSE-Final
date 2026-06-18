@@ -697,7 +697,7 @@ export default function AdminDashboard({ page, setPage }) {
                                     <tr key={u.id}>
                                         <td>{u.name}</td><td>{u.role}</td><td>{u.dept}</td>
                                         <td><span className={`b ${u.status === 'active' ? 'lAc' : 'lIn'}`}>{u.status}</span></td>
-                                        <td>{u.last ? new Date(u.last).toLocaleString() : 'Never'}</td>
+                                        <td>{u.last ? new Date(u.last).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'Never'}</td>
                                     </tr>
                                 ))}
                             </tbody>
